@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'home_page.dart';
-import 'schedule_page.dart';
 import 'profile_page.dart';
+import 'calendar_page.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -11,16 +11,14 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _selectedIndex = 0; // Índice de la pestaña seleccionada, empieza en 0 (Inicio)
+  int _selectedIndex = 0;
 
-  // Lista de las páginas que se mostrarán
   static const List<Widget> _widgetOptions = <Widget>[
     HomePage(),
-    SchedulePage(),
+    CalendarPage(),
     ProfilePage(),
   ];
 
-  // Método que se llama cuando se toca una pestaña
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -30,27 +28,29 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: _widgetOptions.elementAt(_selectedIndex), // Muestra la página seleccionada
-      ),
+      body: _widgetOptions.elementAt(_selectedIndex),
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
+        backgroundColor: const Color(0xFF213354), // Fondo azul oscuro
+        items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.menu_book_rounded), // Ícono de libro para Inicio
+            icon: Icon(Icons.menu_book_rounded),
             label: 'Inicio',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_rounded), // Ícono de calendario para Horario
+            icon: Icon(Icons.calendar_today_rounded),
             label: 'Horario',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline_rounded), // Ícono de persona para Perfil
+            icon: Icon(Icons.person_outline_rounded),
             label: 'Perfil',
           ),
         ],
-        currentIndex: _selectedIndex, // La pestaña actualmente activa
-        selectedItemColor: Colors.blue[800], // Color del ícono seleccionado
-        onTap: _onItemTapped, // Función que se ejecuta al tocar
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.white, // Ítem seleccionado en blanco
+        unselectedItemColor: Colors.grey, // Ítems no seleccionados en gris
+        onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed,
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
       ),
     );
   }

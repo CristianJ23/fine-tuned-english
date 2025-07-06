@@ -5,19 +5,104 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // --- CAMBIO AQUÍ ---
-    // Se eliminó el 'const' de Scaffold
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Mi Perfil'),
-        backgroundColor: const Color(0xFFF4F5F7),
+        backgroundColor: const Color(0xFF213354),
+        title: const Text(
+          'Perfil',
+          style: TextStyle(color: Colors.white),
+        ),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.menu, color: Colors.white),
+          onPressed: () {},
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_off_outlined, color: Colors.white),
+            onPressed: () {},
+          ),
+        ],
+        elevation: 0,
       ),
-      body: const Center(
-        child: Text(
-          'Aquí se mostrará el perfil del estudiante.',
-          style: TextStyle(fontSize: 18),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        child: Column(
+          children: [
+            const Text(
+              "Datos Personales",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF213354),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const CircleAvatar(
+              radius: 60,
+              backgroundImage: AssetImage('assets/perfil.jpg'), // Asegúrate de tener esta imagen en assets
+            ),
+            const SizedBox(height: 24),
+            _buildInfoRow(Icons.person, "Alejandro XXXXXX"),
+            const SizedBox(height: 12),
+            _buildInfoRow(Icons.email, "xxxxxx@xxxx.com"),
+            const SizedBox(height: 12),
+            _buildInfoRow(Icons.fingerprint, "1025639879"),
+            const SizedBox(height: 12),
+            _buildInfoRow(Icons.calendar_today, "24/02/2004"),
+            const SizedBox(height: 32),
+            _buildAcademicButton(),
+            const SizedBox(height: 16),
+            _buildModifyButton(),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String value) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.black),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(value),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAcademicButton() {
+    return ElevatedButton.icon(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF213354),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      onPressed: () {},
+      icon: const Icon(Icons.school, color: Colors.white),
+      label: const Text("Historial Académico", style: TextStyle(color: Colors.white)),
+    );
+  }
+
+  Widget _buildModifyButton() {
+    return ElevatedButton.icon(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.pinkAccent,
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      onPressed: () {},
+      icon: const Icon(Icons.edit, color: Colors.white),
+      label: const Text("Modificar", style: TextStyle(color: Colors.white)),
     );
   }
 }
