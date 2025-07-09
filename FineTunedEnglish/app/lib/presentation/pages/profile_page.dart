@@ -7,25 +7,6 @@ class ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF213354),
-        title: const Text(
-          'Perfil',
-          style: TextStyle(color: Colors.white),
-        ),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: Colors.white),
-          onPressed: () {},
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_off_outlined, color: Colors.white),
-            onPressed: () {},
-          ),
-        ],
-        elevation: 0,
-      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Column(
@@ -41,7 +22,7 @@ class ProfilePage extends StatelessWidget {
             const SizedBox(height: 16),
             const CircleAvatar(
               radius: 60,
-              backgroundImage: AssetImage('assets/perfil.jpg'), // Asegúrate de tener esta imagen en assets
+              backgroundImage: AssetImage('assets/perfil.jpg'),
             ),
             const SizedBox(height: 24),
             _buildInfoRow(Icons.person, "Alejandro XXXXXX"),

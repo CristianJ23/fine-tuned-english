@@ -107,10 +107,9 @@ class HomePage extends StatelessWidget {
       ),
     );
   }
-
   Widget _buildFilterChips() { return SizedBox( height: 35, child: ListView( scrollDirection: Axis.horizontal, children: [ 'Horarios', 'Notas', 'Tareas', 'Cursos', 'Certificados', ].map((label) { return Padding( padding: const EdgeInsets.only(right: 8.0), child: Chip( label: Text(label), backgroundColor: Colors.white, shape: RoundedRectangleBorder( borderRadius: BorderRadius.circular(20), side: BorderSide(color: Colors.grey.shade300), ), ), ); }).toList(), ), ); }
   
-  Widget _buildNewsSection() { return SizedBox( height: 200, child: ListView( scrollDirection: Axis.horizontal, children: const [ NewsCard( title: 'Torneo de fútbol inter-clases', date: 'Jueves 11 Jun. 9:00 pm', imageUrl: 'assets/images/soccer_ball.png', color: Color(0xFF86C6B4), isLiked: true, ), SizedBox(width: 16), NewsCard( title: 'Nuevas becas disponibles para el próximo ciclo', date: 'Domingo 28 Dic.', imageUrl: '', color: Color(0xFFF5B084), isLiked: false, ), ], ), ); }
-  
+  Widget _buildNewsSection() { return SizedBox( height: 200, child: ListView( scrollDirection: Axis.horizontal, children: const [ NewsCard( title: 'Club de conversación abierto', date: 'Jueves 11 Jun. 9:00 pm', imageUrl: '', color: Color(0xFF86C6B4), isLiked: true, ), SizedBox(width: 16), NewsCard( title: 'Nuevas becas disponibles para el próximo ciclo', date: 'Domingo 28 Dic.', imageUrl: '', color: Color(0xFFF5B084), isLiked: false, ), ], ), ); }
+
   Widget _buildSupportBanner() { return Container( padding: const EdgeInsets.all(16), decoration: BoxDecoration( color: Colors.grey.shade200, borderRadius: BorderRadius.circular(12), ), child: Row( children: [ Icon(Icons.support_agent, color: Colors.grey.shade700), const SizedBox(width: 16), const Expanded( child: Column( crossAxisAlignment: CrossAxisAlignment.start, children: [ Text('¿Tienes alguna duda?', style: TextStyle(fontWeight: FontWeight.bold)), Text('Contacta a nuestro equipo de soporte aquí', style: TextStyle(fontSize: 12)), ], ), ), ], ), ); }
 }

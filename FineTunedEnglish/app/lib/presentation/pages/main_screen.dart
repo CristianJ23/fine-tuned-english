@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../widgets/common_app_bar.dart'; 
+import '../widgets/app_drawer.dart';
 import 'home_page.dart';
 import 'profile_page.dart';
 import 'calendar_page.dart';
@@ -12,6 +14,12 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
+
+  static const List<String> _appBarTitles = <String>[
+    'Inicio',
+    'Calendario',
+    'Perfil',
+  ];
 
   static const List<Widget> _widgetOptions = <Widget>[
     HomePage(),
@@ -28,9 +36,11 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: CommonAppBar(title: _appBarTitles[_selectedIndex]), 
+      drawer: const AppDrawer(),
       body: _widgetOptions.elementAt(_selectedIndex),
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: const Color(0xFF213354), // Fondo azul oscuro
+        backgroundColor: const Color(0xFF213354),
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.menu_book_rounded),
@@ -46,8 +56,8 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.white, // Ítem seleccionado en blanco
-        unselectedItemColor: Colors.grey, // Ítems no seleccionados en gris
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.grey,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
         selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
