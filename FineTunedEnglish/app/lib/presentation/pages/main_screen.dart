@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/common_app_bar.dart'; 
+import '../widgets/common_app_bar.dart';
 import '../widgets/app_drawer.dart';
 import 'home_page.dart';
 import 'profile_page.dart';
@@ -36,7 +36,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CommonAppBar(title: _appBarTitles[_selectedIndex]), 
+      appBar: CommonAppBar(title: _appBarTitles[_selectedIndex]),
       drawer: const AppDrawer(),
       body: _widgetOptions.elementAt(_selectedIndex),
       bottomNavigationBar: BottomNavigationBar(

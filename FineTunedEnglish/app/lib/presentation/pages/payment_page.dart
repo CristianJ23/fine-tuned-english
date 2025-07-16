@@ -31,7 +31,7 @@ class _PaymentPageState extends State<PaymentPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-         backgroundColor: const Color(0xFF213354),
+        backgroundColor: const Color(0xFF213354),
         title: const Text('Pago', style: TextStyle(color: Colors.white, fontSize: 24)),
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
@@ -183,7 +183,7 @@ class _PaymentPageState extends State<PaymentPage> {
       ],
     );
   }
-  
+
   Widget _buildTotalCostCard() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -219,9 +219,9 @@ class _PaymentPageState extends State<PaymentPage> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-           color: Colors.grey[100],
-           child: ElevatedButton(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          color: Colors.grey[100],
+          child: ElevatedButton(
             onPressed: _selectedSchedule == null ? null : () {
               Navigator.push(context, MaterialPageRoute(builder: (context) => const ConfirmationPage()));
             },
