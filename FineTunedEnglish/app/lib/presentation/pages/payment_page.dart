@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'schedule_page.dart';
 import 'confirmation_page.dart';
 import '../widgets/shared_footer.dart';
+import 'representative_est_info.dart';
 
 class PaymentPage extends StatefulWidget {
   const PaymentPage({super.key});
@@ -84,7 +85,12 @@ class _PaymentPageState extends State<PaymentPage> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         ElevatedButton(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => RepresentativeFormPage()),
+            );
+          },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.amber[700],
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
