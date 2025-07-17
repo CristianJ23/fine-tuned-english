@@ -1,5 +1,6 @@
+import 'package:app/presentation/pages/login_page.dart';
 import 'package:flutter/material.dart';
-import 'presentation/pages/main_screen.dart'; // <-- CAMBIO: Importamos MainScreen
+import 'package:flutter/material.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,14 +12,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Fine App',
+      title: 'Fine-Tuned English',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: const Color(0xFFF4F5F7),
-        useMaterial3: true,
+        scaffoldBackgroundColor: Colors.white,
       ),
-      debugShowCheckedModeBanner: false,
-      home: const MainScreen(), // <-- CAMBIO: MainScreen es ahora la página de inicio
+      home: const LoginPage(), // 👈 Aquí se define la página inicial
     );
   }
 }

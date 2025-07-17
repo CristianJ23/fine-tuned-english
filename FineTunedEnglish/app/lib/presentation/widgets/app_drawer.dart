@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../pages/payment_page.dart';
+import '../pages/login_page.dart'; // 👈 Import para redirigir al LoginPage
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -7,7 +8,7 @@ class AppDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const drawerBackgroundColor = Color(0xFF213354);
-    const buttonColor = Color(0xFF334155); 
+    const buttonColor = Color(0xFF334155);
 
     return Drawer(
       backgroundColor: drawerBackgroundColor,
@@ -72,11 +73,11 @@ class AppDrawer extends StatelessWidget {
         children: [
           const CircleAvatar(
             radius: 40,
-            backgroundImage: AssetImage('assets/perfil.jpg'),
+            backgroundImage: AssetImage('assets/splash/app_icon.png'), // 👈 Imagen actualizada
           ),
           const SizedBox(height: 16),
           const Text(
-            'Hi, Alexandre Ramirez',
+            'Hi, Crista Jimines', // 👈 Nombre actualizado
             style: TextStyle(
               color: Colors.white,
               fontSize: 18,
@@ -85,7 +86,7 @@ class AppDrawer extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'XXXX@XXXXX.com',
+            'crista.jimines@email.com',
             style: TextStyle(
               color: Colors.white.withOpacity(0.7),
               fontSize: 14,
@@ -121,6 +122,11 @@ class AppDrawer extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: ElevatedButton.icon(
         onPressed: () {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const LoginPage()),
+                (Route<dynamic> route) => false,
+          );
         },
         icon: const Icon(Icons.exit_to_app_rounded, color: Colors.white),
         label: const Text(

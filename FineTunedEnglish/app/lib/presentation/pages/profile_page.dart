@@ -22,12 +22,12 @@ class ProfilePage extends StatelessWidget {
             const SizedBox(height: 16),
             const CircleAvatar(
               radius: 60,
-              backgroundImage: AssetImage('assets/perfil.jpg'),
+              backgroundImage: AssetImage('assets/splash/app_icon.png'), // 👈 Imagen actualizada
             ),
             const SizedBox(height: 24),
-            _buildInfoRow(Icons.person, "Alejandro XXXXXX"),
+            _buildInfoRow(Icons.person, "Crista Jimines"), // 👈 Nombre actualizado
             const SizedBox(height: 12),
-            _buildInfoRow(Icons.email, "xxxxxx@xxxx.com"),
+            _buildInfoRow(Icons.email, "crista.jimines@email.com"), // 👈 Correo actualizado
             const SizedBox(height: 12),
             _buildInfoRow(Icons.fingerprint, "1025639879"),
             const SizedBox(height: 12),
