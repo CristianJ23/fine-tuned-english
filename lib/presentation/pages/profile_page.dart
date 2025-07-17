@@ -8,6 +8,39 @@ class ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+<<<<<<< HEAD
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        child: Column(
+          children: [
+            const Text(
+              "Datos Personales",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF213354),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const CircleAvatar(
+              radius: 60,
+              backgroundImage: AssetImage('assets/perfil.jpg'),
+            ),
+            const SizedBox(height: 24),
+            _buildInfoRow(Icons.person, "Alejandro XXXXXX"),
+            const SizedBox(height: 12),
+            _buildInfoRow(Icons.email, "xxxxxx@xxxx.com"),
+            const SizedBox(height: 12),
+            _buildInfoRow(Icons.fingerprint, "1025639879"),
+            const SizedBox(height: 12),
+            _buildInfoRow(Icons.calendar_today, "24/02/2004"),
+            const SizedBox(height: 32),
+            _buildAcademicButton(),
+            const SizedBox(height: 16),
+            _buildModifyButton(),
+          ],
+        ),
+=======
       body: Column(
         children: [
           const HeaderMenu(),
@@ -36,6 +69,7 @@ class ProfilePage extends StatelessWidget {
             ),
           ),
         ],
+>>>>>>> 10ffd6c (Subiendo los últimos cambios al repositorio)
       ),
     );
   }

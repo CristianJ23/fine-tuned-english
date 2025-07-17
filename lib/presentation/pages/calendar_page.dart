@@ -22,6 +22,25 @@ class _CalendarScreenState extends State<CalendarPage> {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
+    // CAMBIO CLAVE: Ya no hay Scaffold. La página devuelve directamente
+    // el contenido que irá en el 'body' del MainScreen.
+    return Container(
+      // Damos un color de fondo para que coincida con el tema de la app.
+      // O puedes quitarlo y usará el scaffoldBackgroundColor de tu MaterialApp.
+      color: Colors.grey[100], 
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            _buildCalendar(),
+            const SizedBox(height: 20),
+            if (_selectedDay != null) _buildDayInfoSection(_selectedDay!),
+            const SizedBox(height: 20),
+            _buildLegendCard(),
+          ],
+        ),
+=======
     return Scaffold(
       backgroundColor: Colors.grey[100],
       body: Column(
@@ -42,18 +61,25 @@ class _CalendarScreenState extends State<CalendarPage> {
             ),
           ),
         ],
+>>>>>>> 10ffd6c (Subiendo los últimos cambios al repositorio)
       ),
     );
   }
+
+  // --- El resto de los métodos de ayuda no han cambiado ---
 
   Widget _buildCalendar() {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+<<<<<<< HEAD
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 4))],
+=======
         boxShadow: const [
           BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 4)),
         ],
+>>>>>>> 10ffd6c (Subiendo los últimos cambios al repositorio)
       ),
       child: TableCalendar(
         firstDay: DateTime.utc(2025, 1, 1),
@@ -76,31 +102,15 @@ class _CalendarScreenState extends State<CalendarPage> {
           defaultBuilder: (context, day, _) {
             final key = DateTime.utc(day.year, day.month, day.day);
             final status = statusMap[key];
-
             Color? bgColor;
             Color textColor = Colors.black;
-
             switch (status) {
-              case 'falta':
-                bgColor = Colors.redAccent;
-                textColor = Colors.white;
-                break;
-              case 'deber':
-                bgColor = Colors.purple;
-                textColor = Colors.white;
-                break;
-              case 'asistencia':
-                bgColor = Colors.indigo;
-                textColor = Colors.white;
-                break;
-              case 'recordatorio':
-                bgColor = Colors.green;
-                textColor = Colors.white;
-                break;
+              case 'falta': bgColor = Colors.redAccent; textColor = Colors.white; break;
+              case 'deber': bgColor = Colors.purple; textColor = Colors.white; break;
+              case 'asistencia': bgColor = Colors.indigo; textColor = Colors.white; break;
+              case 'recordatorio': bgColor = Colors.green; textColor = Colors.white; break;
             }
-
             final isSelected = isSameDay(_selectedDay, day);
-
             return Center(
               child: Container(
                 width: 36,
@@ -108,18 +118,10 @@ class _CalendarScreenState extends State<CalendarPage> {
                 decoration: BoxDecoration(
                   color: isSelected ? Colors.white : bgColor,
                   shape: BoxShape.circle,
-                  border: isSelected
-                      ? Border.all(color: Colors.deepPurple, width: 2)
-                      : null,
+                  border: isSelected ? Border.all(color: Colors.deepPurple, width: 2) : null,
                 ),
                 alignment: Alignment.center,
-                child: Text(
-                  '${day.day}',
-                  style: TextStyle(
-                    color: isSelected ? Colors.black : textColor,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                child: Text('${day.day}', style: TextStyle(color: isSelected ? Colors.black : textColor, fontWeight: FontWeight.w600)),
               ),
             );
           },
@@ -131,53 +133,24 @@ class _CalendarScreenState extends State<CalendarPage> {
   Widget _buildDayInfoSection(DateTime day) {
     final key = DateTime.utc(day.year, day.month, day.day);
     final status = statusMap[key];
-
     IconData icon;
     String title;
     String message;
     Color color;
 
     switch (status) {
-      case 'falta':
-        icon = Icons.warning_amber_rounded;
-        title = "Falta injustificada";
-        message = "Pulsa para justificar esta falta.";
-        color = Colors.redAccent;
-        break;
-      case 'deber':
-        icon = Icons.book;
-        title = "Fecha de Entrega";
-        message = "Tienes un deber asignado este día.";
-        color = Colors.purple;
-        break;
-      case 'asistencia':
-        icon = Icons.check_circle;
-        title = "Asistencia";
-        message = "Asistencia registrada correctamente.";
-        color = Colors.indigo;
-        break;
-      case 'recordatorio':
-        icon = Icons.notifications;
-        title = "Recordatorio";
-        message = "Tienes algo pendiente este día.";
-        color = Colors.green;
-        break;
-      default:
-        icon = Icons.info_outline;
-        title = "Sin eventos";
-        message = "No hay eventos registrados para esta fecha.";
-        color = Colors.grey;
+      case 'falta': icon = Icons.warning_amber_rounded; title = "Falta injustificada"; message = "Pulsa para justificar esta falta."; color = Colors.redAccent; break;
+      case 'deber': icon = Icons.book; title = "Fecha de Entrega"; message = "Tienes un deber asignado este día."; color = Colors.purple; break;
+      case 'asistencia': icon = Icons.check_circle; title = "Asistencia"; message = "Asistencia registrada correctamente."; color = Colors.indigo; break;
+      case 'recordatorio': icon = Icons.notifications; title = "Recordatorio"; message = "Tienes algo pendiente este día."; color = Colors.green; break;
+      default: icon = Icons.info_outline; title = "Sin eventos"; message = "No hay eventos registrados para esta fecha."; color = Colors.grey;
     }
-
     return Card(
       color: color.withOpacity(0.1),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         leading: Icon(icon, color: color, size: 30),
-        title: Text(
-          '$title (${day.toLocal().toString().split(" ")[0]})',
-          style: TextStyle(fontWeight: FontWeight.bold, color: color),
-        ),
+        title: Text('$title (${day.toLocal().toString().split(" ")[0]})', style: TextStyle(fontWeight: FontWeight.bold, color: color)),
         subtitle: Text(message),
         onTap: status == 'falta' ? () => _justificarFalta(day) : null,
       ),
@@ -219,9 +192,13 @@ class _CalendarScreenState extends State<CalendarPage> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
+<<<<<<< HEAD
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Falta justificada correctamente')));
+=======
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Falta justificada correctamente')),
               );
+>>>>>>> 10ffd6c (Subiendo los últimos cambios al repositorio)
             },
             child: const Text("Justificar"),
           ),

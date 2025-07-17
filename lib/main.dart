@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // <- Necesario para ocultar la barra de estado
-import 'presentation/pages/main_screen.dart'; // MainScreen como página principal
+import 'package:flutter/services.dart'; // Para ocultar la barra de estado
+import 'presentation/pages/login_page.dart'; // Asegúrate que esta ruta sea correcta
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 👇 Ocultamos la barra de estado (hora, batería, etc.)
+  // Oculta la barra de estado (hora, batería, etc.)
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: []);
 
   runApp(const MyApp());
@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
-      home: const MainScreen(),
+      home: const LoginPage(), // <- Aquí inicia en Login
     );
   }
 }

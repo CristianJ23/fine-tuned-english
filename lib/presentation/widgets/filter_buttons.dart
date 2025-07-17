@@ -28,11 +28,11 @@ class _FilterButtonsState extends State<FilterButtons> {
             ),
             const SizedBox(height: 16),
             ...[
-              "Ingeniería de Software",
-              "Psicología",
-              "Administración de Empresas",
-              "Derecho",
-              "Medicina"
+              "Tiny Kids",
+              "Children"
+              "Youth",
+              "Teens",
+              "Seniors",
             ].map(
                   (program) => ListTile(
                 title: Text(program),
