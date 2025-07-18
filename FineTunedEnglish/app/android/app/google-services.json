@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "964938245079",
+    "project_id": "finetunedenglish-36df4",
+    "storage_bucket": "finetunedenglish-36df4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:964938245079:android:a89c70283d0456a96b6192",
+        "android_client_info": {
+          "package_name": "com.example.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCFifCNla995Qi4zWwIqX1TsBnoVmBOGAM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
