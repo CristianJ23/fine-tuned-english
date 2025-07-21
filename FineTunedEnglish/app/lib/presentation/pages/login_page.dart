@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import '../widgets/input_field.dart';
-import '../widgets/auth_tabs.dart';
-import 'main_screen.dart';
+// Asegúrate de que las rutas de import sean correctas
+import 'package:app/presentation/services/auth_service.dart';
+import 'package:app/presentation/widgets/input_field.dart';
+import 'package:app/presentation/widgets/auth_tabs.dart';
+import 'package:app/presentation/pages/main_screen.dart';
+import 'package:app/presentation/pages/register_page.dart'; // Añadir import si aún no estaba
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -14,20 +17,50 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  void _login() {
+  // Usamos el nombre de clase estandarizado: AuthService
+  final AuthService _authService = AuthService();
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  void _login() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
-    if (email == '123@hotmail.com' && password == '123') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const MainScreen()),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Credenciales incorrectas')),
-      );
+    // ===== AÑADE ESTA LÍNEA DE DEPURACIÓN AQUÍ =====
+    print("Intentando iniciar sesión con: Email -> '$email' | Password -> '$password'");
+    // ===============================================
+
+    final error = await _authService.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+
+
+    if (mounted) {
+      if (error == null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MainScreen()),
+        );
+      } else {
+        setState(() {
+          _errorMessage = error;
+          _isLoading = false;
+        });
+      }
     }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -40,70 +73,55 @@ class _LoginPageState extends State<LoginPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 50),
-
-              // Título + imagen con padding abajo
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Título
-                    Expanded(
+                    const Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.only(top: 8),
+                        padding: EdgeInsets.only(top: 8),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
+                          children: [
                             Text(
                               'FINE-TUNED ENGLISH\nLANGUAGE INSTITUTE',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue,
-                              ),
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue),
                             ),
                           ],
                         ),
                       ),
                     ),
-                    // Imagen
                     Padding(
                       padding: const EdgeInsets.only(top: 0, right: 4),
                       child: SizedBox(
                         height: 80,
                         width: 80,
-                        child: Image.asset(
-                          'assets/splash/app_icon.png',
-                          fit: BoxFit.contain,
-                        ),
+                        child: Image.asset('assets/splash/app_icon.png', fit: BoxFit.contain,
+                            errorBuilder: (c, e, s) => const Icon(Icons.school, size: 80, color: Colors.blue)),
                       ),
                     ),
                   ],
                 ),
               ),
-
               const SizedBox(height: 30),
               const AuthTabs(isLogin: true),
               const SizedBox(height: 24),
-              const Text(
-                'Inicie sesión\nmediante su cuenta organizativa',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
-              ),
+              const Text('Inicie sesión\nmediante su cuenta organizativa', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
               const SizedBox(height: 30),
 
-              InputField(
-                icon: Icons.person_outline,
-                hint: 'Correo',
-                controller: _emailController,
-              ),
+              InputField(icon: Icons.person_outline, hint: 'Correo', controller: _emailController),
               const SizedBox(height: 15),
+              InputField(icon: Icons.lock_outline, hint: 'Contraseña', obscure: true, controller: _passwordController),
 
-              InputField(
-                icon: Icons.lock_outline,
-                hint: 'Contraseña',
-                obscure: true,
-                controller: _passwordController,
-              ),
+              if (_errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 20.0),
+                  child: Center(
+                    child: Text(_errorMessage!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.red, fontSize: 14)),
+                  ),
+                ),
+
               const SizedBox(height: 30),
 
               SizedBox(
@@ -114,24 +132,20 @@ class _LoginPageState extends State<LoginPage> {
                     backgroundColor: const Color(0xFFE62054),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                   ),
-                  onPressed: _login,
-                  child: const Text('Iniciar sesión', style: TextStyle(color: Colors.white)),
+                  onPressed: _isLoading ? null : _login,
+                  child: _isLoading
+                      ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3))
+                      : const Text('Iniciar sesión', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),
               const SizedBox(height: 10),
-
               Center(
                 child: TextButton(
                   onPressed: () {},
                   child: const Text.rich(
                     TextSpan(
                       text: '¿Olvidaste tu contraseña? ',
-                      children: [
-                        TextSpan(
-                          text: 'Click aquí',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
+                      children: [TextSpan(text: 'Click aquí', style: TextStyle(fontWeight: FontWeight.bold))],
                     ),
                     style: TextStyle(fontSize: 12, color: Colors.black),
                   ),

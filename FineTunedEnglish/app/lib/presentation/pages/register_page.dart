@@ -1,8 +1,13 @@
+// register_page.dart (MODIFICADO PARA REDIRECCIONAR A PÁGINA DE PAGO)
+import 'package:app/presentation/models/english_level.dart'; // No longer strictly needed for direct payment redirect, but can be kept if 'english_level.dart' is used elsewhere.
 import 'package:flutter/material.dart';
 import '../widgets/input_field.dart';
 import '../widgets/auth_tabs.dart';
 import 'login_page.dart';
-import 'payment_page.dart'; // 👈 Asegúrate de que la ruta esté correcta
+import '../services/auth_service.dart';
+// import '../services/english_level_service.dart'; // REMOVER: Ya no se necesita para la redirección directa al pago
+// import 'englishleveldetailscreen.dart'; // REMOVER: Ya no se necesita para la redirección directa al pago
+import 'payment_page.dart'; // IMPORTAR: Tu página de pago
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -13,6 +18,7 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _cedulaController = TextEditingController();
@@ -21,8 +27,10 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _birthDateController = TextEditingController();
 
   bool _termsAccepted = false;
+  final AuthService _authService = AuthService();
+  // final EnglishLevelService _englishLevelService = EnglishLevelService(); // REMOVER: Ya no se necesita
 
-  void _register() {
+  void _register() async {
     if (!_termsAccepted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Debe aceptar los términos y condiciones')),
@@ -31,6 +39,7 @@ class _RegisterPageState extends State<RegisterPage> {
     }
 
     if (_nameController.text.trim().isEmpty ||
+        _lastNameController.text.trim().isEmpty ||
         _emailController.text.trim().isEmpty ||
         _passwordController.text.trim().isEmpty ||
         _cedulaController.text.trim().isEmpty ||
@@ -43,11 +52,61 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    // ✅ Si todo está correcto, ir a la pantalla de pago
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const PaymentPage()),
+    DateTime? birthDate;
+    try {
+      final parts = _birthDateController.text.split('/');
+      if (parts.length == 3) {
+        birthDate = DateTime(
+          int.parse(parts[2]),
+          int.parse(parts[1]),
+          int.parse(parts[0]),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Formato de fecha de nacimiento inválido. Use DD/MM/YYYY')),
+      );
+      return;
+    }
+
+    if (birthDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor seleccione una fecha de nacimiento válida')),
+      );
+      return;
+    }
+
+    String? errorMessage = await _authService.registerStudent(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+      nombres: _nameController.text.trim(),
+      apellidos: _lastNameController.text.trim(),
+      numeroCedula: _cedulaController.text.trim(),
+      telefono: _phoneController.text.trim(),
+      nivelEducacion: _educationController.text.trim(),
+      fechaNacimiento: birthDate,
     );
+
+    if (errorMessage == null) {
+      // Registro exitoso
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Registro exitoso. Redireccionando a la página de pago...')),
+      );
+
+      // REDIRECCIÓN DIRECTA A LA PÁGINA DE PAGO
+      Navigator.pushReplacement( // Usamos pushReplacement para que el usuario no pueda volver a la página de registro con el botón de atrás.
+        context,
+        MaterialPageRoute(
+          builder: (_) => const PaymentPage(), // Asegúrate de que PaymentPage sea el nombre correcto de tu widget de página de pago
+        ),
+      );
+
+    } else {
+      // Registro fallido, mostrar el mensaje de error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
+    }
   }
 
   @override
@@ -107,8 +166,14 @@ class _RegisterPageState extends State<RegisterPage> {
               const SizedBox(height: 30),
               InputField(
                 icon: Icons.person_outline,
-                hint: 'Nombre',
+                hint: 'Nombres',
                 controller: _nameController,
+              ),
+              const SizedBox(height: 15),
+              InputField(
+                icon: Icons.person_outline,
+                hint: 'Apellidos',
+                controller: _lastNameController,
               ),
               const SizedBox(height: 15),
               InputField(
@@ -137,7 +202,6 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               const SizedBox(height: 15),
 
-              // Dropdown de educación
               DropdownButtonFormField<String>(
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.school),
@@ -163,7 +227,6 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               const SizedBox(height: 15),
 
-              // Fecha de nacimiento
               TextField(
                 controller: _birthDateController,
                 readOnly: true,

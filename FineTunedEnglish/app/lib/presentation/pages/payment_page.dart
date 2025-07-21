@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import 'schedule_page.dart';
-import 'confirmation_page.dart';
+import '../models/inscription.dart';
 import '../widgets/shared_footer.dart';
 import 'representative_est_info.dart';
+// Import the EnglishLevelDetailScreen and SubLevel model
+import '../pages/EnglishLevelDetailScreen.dart'; // Make sure this path is correct
+import '../models/sub_level.dart'; // Make sure this path is correct
+import '../pages/confirmation_page.dart';
 
 class PaymentPage extends StatefulWidget {
   const PaymentPage({super.key});
@@ -13,16 +16,27 @@ class PaymentPage extends StatefulWidget {
 
 class _PaymentPageState extends State<PaymentPage> {
   String? _selectedPaymentMethod;
-  Map<String, dynamic>? _selectedSchedule;
+  // Change _selectedSchedule to hold a SubLevel object
+  SubLevel? _selectedSubLevel;
 
-  void _navigateToSchedulePage() async {
-    final result = await Navigator.push<Map<String, dynamic>>(
+  // Modify this to navigate to EnglishLevelDetailScreen
+  void _navigateToEnglishLevelDetailScreen() async {
+    // You need a way to get the 'levelId' to show details of a specific English level.
+    // For demonstration, I'll use a placeholder ID.
+    // In a real app, you might pass this ID from a previous screen,
+    // or fetch a list of English levels first.
+    final String placeholderLevelId = 'gAAJZq7aO0AQFa2hhoXD'; // This ID comes from your image (Beginner a1)
+
+    final result = await Navigator.push<SubLevel>( // Expecting a SubLevel object back
       context,
-      MaterialPageRoute(builder: (context) => const SchedulePage()),
+      MaterialPageRoute(
+        builder: (context) => EnglishLevelDetailScreen(levelId: placeholderLevelId),
+      ),
     );
+
     if (result != null) {
       setState(() {
-        _selectedSchedule = result;
+        _selectedSubLevel = result;
       });
     }
   }
@@ -51,12 +65,14 @@ class _PaymentPageState extends State<PaymentPage> {
           children: [
             _buildRepresentativeButton(),
             const SizedBox(height: 20),
-            if (_selectedSchedule == null)
+            // Check for _selectedSubLevel instead of _selectedSchedule
+            if (_selectedSubLevel == null)
               _buildCourseSelectionCard()
             else
               _buildSelectedScheduleInfo(),
             const SizedBox(height: 20),
-            if (_selectedSchedule != null) ...[
+            // Check for _selectedSubLevel
+            if (_selectedSubLevel != null) ...[
               _buildTotalCostCard(),
               const SizedBox(height: 30),
             ],
@@ -88,7 +104,7 @@ class _PaymentPageState extends State<PaymentPage> {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => RepresentativeFormPage()),
+              MaterialPageRoute(builder: (context) => const RepresentativeFormPage()),
             );
           },
           style: ElevatedButton.styleFrom(
@@ -104,7 +120,8 @@ class _PaymentPageState extends State<PaymentPage> {
 
   Widget _buildCourseSelectionCard() {
     return GestureDetector(
-      onTap: _navigateToSchedulePage,
+      // Change onTap to the new navigation method
+      onTap: _navigateToEnglishLevelDetailScreen,
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
@@ -132,7 +149,8 @@ class _PaymentPageState extends State<PaymentPage> {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _navigateToSchedulePage,
+              // Change onPressed to the new navigation method
+              onPressed: _navigateToEnglishLevelDetailScreen,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.amber[700],
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -173,13 +191,15 @@ class _PaymentPageState extends State<PaymentPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(_selectedSchedule!['name']!, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 18)),
-                    Text('${_selectedSchedule!['days']!} - ${_selectedSchedule!['hours']!}', style: TextStyle(color: Colors.white.withOpacity(0.8))),
+                    // Access properties directly from _selectedSubLevel
+                    Text(_selectedSubLevel!.name, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 18)),
+                    Text('${_selectedSubLevel!.dias} - ${_selectedSubLevel!.horas}', style: TextStyle(color: Colors.white.withOpacity(0.8))),
                   ],
                 ),
               ),
               OutlinedButton(
-                onPressed: _navigateToSchedulePage,
+                // Change onPressed to the new navigation method
+                onPressed: _navigateToEnglishLevelDetailScreen,
                 style: OutlinedButton.styleFrom(backgroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
                 child: const Text('Cambiar', style: TextStyle(color: Colors.black)),
               )
@@ -200,7 +220,8 @@ class _PaymentPageState extends State<PaymentPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text('Costo Total', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              Text('\$${_selectedSchedule!['cost']?.toStringAsFixed(2)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              // Access cost directly from _selectedSubLevel
+              Text('\$${_selectedSubLevel!.costo.toStringAsFixed(2)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 8),
@@ -228,8 +249,26 @@ class _PaymentPageState extends State<PaymentPage> {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           color: Colors.grey[100],
           child: ElevatedButton(
-            onPressed: _selectedSchedule == null ? null : () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const ConfirmationPage()));
+            // Use _selectedSubLevel to determine if button is enabled
+            onPressed: _selectedSubLevel == null ? null : () {
+              // Create Inscription using data from _selectedSubLevel
+              final inscription = Inscription(
+                id: 'tmp_${DateTime.now().millisecondsSinceEpoch}',
+                estudianteId: 'est123',    // <- Pass the real student ID
+                subNivelId: _selectedSubLevel!.id,       // <- Use the sub-level ID
+                nivelInglesId: 'gAAJZq7aO0AQFa2hhoXD',    // <- Assuming this is the parent English level ID
+                fechaInscripcion: DateTime.now(),
+                estado: 'pendiente',
+                notaFinal: null,
+                costoPagado: _selectedSubLevel!.costo,
+              );
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ConfirmationPage(inscription: inscription),
+                ),
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
@@ -237,7 +276,8 @@ class _PaymentPageState extends State<PaymentPage> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               minimumSize: const Size(double.infinity, 55),
             ),
-            child: Text('Realizar Pago - \$${_selectedSchedule?['cost']?.toStringAsFixed(2) ?? '0.00'}', style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            // Display cost from _selectedSubLevel
+            child: Text('Realizar Pago - \$${_selectedSubLevel?.costo.toStringAsFixed(2) ?? '0.00'}', style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
           ),
         ),
         const SharedFooter(),
@@ -245,7 +285,6 @@ class _PaymentPageState extends State<PaymentPage> {
     );
   }
 
-  // ---- CORRECCIÓN AQUÍ: RESTAURANDO MÉTODOS ----
   Widget _buildHeaderText() {
     return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -85,4 +85,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'finetunedenglish-36df4.firebasestorage.app',
     measurementId: 'G-WV92JGXXKW',
   );
+
 }

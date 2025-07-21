@@ -1,11 +1,38 @@
 import 'package:flutter/material.dart';
+import '../models/inscription.dart';
+import '../services/inscription_service.dart';
 import 'main_screen.dart';
 
 class ConfirmationPage extends StatelessWidget {
-  const ConfirmationPage({super.key});
+  final Inscription inscription;
+
+  // 🔧 Quitamos const del constructor porque tenemos un campo no constante abajo
+  ConfirmationPage({super.key, required this.inscription});
+
+  // Instancia del servicio de inscripción
+  final InscriptionService _inscriptionService = InscriptionService();
+
+  Future<void> _saveInscription(BuildContext context) async {
+    try {
+      await _inscriptionService.guardarInscripcion(inscription);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Inscripción registrada con éxito! 🎉')),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al registrar la inscripción: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _saveInscription(context);
+    });
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -15,9 +42,9 @@ class ConfirmationPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Spacer(), 
+              const Spacer(),
               const Text(
-                'Listo Realizado el Pago',
+                '¡Pago Realizado con Éxito!',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 24,
@@ -31,17 +58,15 @@ class ConfirmationPage extends StatelessWidget {
                 height: 150,
                 errorBuilder: (context, error, stackTrace) {
                   return const Icon(
-                    Icons.school,
+                    Icons.check_circle_outline,
                     size: 100,
-                    color: Colors.grey,
+                    color: Colors.green,
                   );
                 },
               ),
-              // ----- FIN DEL CAMBIO -----
-
               const SizedBox(height: 30),
               const Text(
-                'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
+                '¡Felicidades! Tu inscripción ha sido procesada correctamente. Te enviaremos un correo con los detalles.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.black54, fontSize: 16),
               ),
@@ -50,7 +75,7 @@ class ConfirmationPage extends StatelessWidget {
                 onPressed: () {
                   Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(builder: (context) => const MainScreen()),
-                    (Route<dynamic> route) => false,
+                        (Route<dynamic> route) => false,
                   );
                 },
                 style: ElevatedButton.styleFrom(

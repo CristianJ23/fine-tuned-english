@@ -1,3 +1,4 @@
+// shared_footer.dart
 import 'package:flutter/material.dart';
 
 class SharedFooter extends StatelessWidget {
