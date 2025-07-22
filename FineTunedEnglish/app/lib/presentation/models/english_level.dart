@@ -1,4 +1,3 @@
-// english_level.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class EnglishLevel {
@@ -7,6 +6,7 @@ class EnglishLevel {
   final String description;
   final int minAge;
   final int maxAge;
+  final String tipo; // <-- CAMPO NUEVO
 
   EnglishLevel({
     required this.id,
@@ -14,6 +14,7 @@ class EnglishLevel {
     required this.description,
     required this.minAge,
     required this.maxAge,
+    required this.tipo, // <-- CAMPO NUEVO
   });
 
   factory EnglishLevel.fromFirestore(DocumentSnapshot doc) {
@@ -23,7 +24,8 @@ class EnglishLevel {
       name: data['nombre'] ?? 'Sin Nombre',
       description: data['descripcion'] ?? 'Sin Descripción',
       minAge: data['edadMinima'] ?? 0,
-      maxAge: data['edadMaxima'] ?? 100,
+      maxAge: data['edadMaxima'] ?? 99,
+      tipo: data['tipo'] ?? 'General', // <-- CAMPO NUEVO
     );
   }
 }

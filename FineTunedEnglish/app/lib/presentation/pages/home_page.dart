@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
-// Asegúrate de que estas rutas sean correctas para tu proyecto.
-import 'package:app/presentation/widgets/homework_card.dart';
-import 'package:app/presentation/widgets/task_list_item.dart'; // Importamos el enum TaskStatus
+import '../models/enrolled_course.dart';
+import '../models/english_level.dart';
+import '../services/auth_service.dart';
+import '../services/inscription_service.dart';
+import '../services/task_service.dart';
+import '../widgets/homework_card.dart';
+import '../widgets/task_list_item.dart';
 import 'all_tasks_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -12,77 +16,144 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String? _selectedProgramType;
-  String? _selectedProgram;
+  final InscriptionService _inscriptionService = InscriptionService();
+  final TaskService _taskService = TaskService();
 
-  // FUENTE DE DATOS CENTRALIZADA
-  final List<Map<String, dynamic>> allTasksData = [
-    {
-      'title': 'Reading',
-      'description': 'Read chapter 5 and summarize.',
-      'color': Colors.green.shade700,
-      'status': TaskStatus.done // Estado "done"
-    },
-    {
-      'title': 'Final Project',
-      'description': 'Entregar el proyecto final del curso.',
-      'color': Colors.red.shade400,
-      'status': TaskStatus.graded, 'score': '0/10' // Estado "graded"
-    },
-    {
-      'title': 'Present Tense',
-      'description': 'Choose the correct word in the present tense.',
-      'color': Colors.green.shade400,
-      'status': TaskStatus.pending, 'hasComment': true // Estado "pending"
-    },
-    {
-      'title': 'Verb To Be',
-      'description': 'Research about verb to be and to use it.',
-      'color': Colors.purple.shade400,
-      'status': TaskStatus.notDelivered, 'isStarred': true // Estado "notDelivered"
-    },
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  List<EnrolledCourse> _allEnrolledCourses = [];
+  List<EnglishLevel> _enrolledLevels = [];
+  EnglishLevel? _selectedLevel;
+  
+  List<EnrolledCourse> _filteredCourses = [];
+  EnrolledCourse? _selectedCourse;
+
+  List<TaskWithSubmission> _currentTasks = [];
+  bool _isLoadingTasks = false;
+  
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    final studentId = AuthService.currentUser?.id;
+    if (studentId == null) {
+      if (mounted) setState(() => _errorMessage = "Error: Usuario no autenticado.");
+      return;
+    }
     
-  ];
+    final courses = await _inscriptionService.getEnrolledCoursesForStudent(studentId);
+    
+    if (mounted) {
+      final uniqueLevels = <String, EnglishLevel>{};
+      for (var course in courses) {
+        uniqueLevels[course.level.id] = course.level;
+      }
 
+      setState(() {
+        _allEnrolledCourses = courses;
+        _enrolledLevels = uniqueLevels.values.toList();
+
+        if (courses.isNotEmpty) {
+          final latestCourse = courses.first;
+          _selectedLevel = latestCourse.level;
+          _filterCoursesByLevel(_selectedLevel);
+          _onCourseSelected(latestCourse);
+        }
+        _isLoading = false;
+      });
+    }
+  }
+  
+  void _filterCoursesByLevel(EnglishLevel? level) {
+    if (level == null) return;
+
+    setState(() {
+      _selectedLevel = level;
+      _filteredCourses = _allEnrolledCourses
+          .where((course) => course.inscription.nivelInglesId == level.id)
+          .toList();
+      
+      if (_filteredCourses.isNotEmpty && !_filteredCourses.contains(_selectedCourse)) {
+        _onCourseSelected(_filteredCourses.first);
+      } else if (_filteredCourses.isEmpty) {
+        _selectedCourse = null;
+        _currentTasks = [];
+      }
+    });
+  }
+
+  Future<void> _onCourseSelected(EnrolledCourse? course) async {
+    if (course == null) return;
+    setState(() {
+      _selectedCourse = course;
+      _isLoadingTasks = true;
+      _currentTasks = [];
+    });
+    
+    final tasks = await _taskService.getTasksForInscription(
+      course.inscription.id,
+      AuthService.currentUser!.id
+    );
+    if(mounted) {
+      setState(() {
+        _currentTasks = tasks;
+        _isLoadingTasks = false;
+      });
+    }
+  }
+  
   @override
   Widget build(BuildContext context) {
-    // FILTRADO DE DATOS
-    final newTasks = allTasksData.where((task) =>
-        task['status'] == TaskStatus.pending ||
-        task['status'] == TaskStatus.done).toList();
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
+    if (_errorMessage != null) return Center(child: Text(_errorMessage!));
+    if (_allEnrolledCourses.isEmpty) return const Center(
+        child: Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text("No estás inscrito en ningún curso activo.", textAlign: TextAlign.center),
+        ),
+    );
 
-    final recentTasks = allTasksData.where((task) =>
-        task['status'] == TaskStatus.notDelivered ||
-        task['status'] == TaskStatus.graded).toList();
+    final newTasks = _currentTasks.where((taskWithSub) =>
+        taskWithSub.submission.estado == TaskStatus.pending ||
+        taskWithSub.submission.estado == TaskStatus.notDelivered).toList();
+
+    final recentTasks = _currentTasks.where((taskWithSub) =>
+        taskWithSub.submission.estado == TaskStatus.done ||
+        taskWithSub.submission.estado == TaskStatus.graded).toList();
         
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildFilters(),
-          
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSectionHeader('Tareas Nuevas'),
-                const SizedBox(height: 16),
-                _buildTasksList(newTasks),
-                const SizedBox(height: 24),
-                _buildSectionHeader('Tareas Recientes'),
-                const SizedBox(height: 16),
-                _buildTasksList(recentTasks),
-                const SizedBox(height: 24),
-              ],
-            ),
+            child: _isLoadingTasks 
+              ? const Center(child: Padding(padding: EdgeInsets.symmetric(vertical: 40.0), child: CircularProgressIndicator()))
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionHeader('Tareas Nuevas'),
+                    const SizedBox(height: 16),
+                    _buildTasksList(newTasks),
+                    const SizedBox(height: 24),
+                    _buildSectionHeader('Tareas Recientes'),
+                    const SizedBox(height: 16),
+                    _buildTasksList(recentTasks),
+                    const SizedBox(height: 24),
+                  ],
+                ),
           ),
         ],
       ),
     );
   }
 
-  // Widget para la sección de filtros de la parte superior
+
   Widget _buildFilters() {
     return Container(
       color: Colors.grey[100],
@@ -92,85 +163,79 @@ class _HomePageState extends State<HomePage> {
           Row(
             children: [
               Expanded(
-                child: _buildDropdownButton('Tipo de Programa', _selectedProgramType, ['Kids', 'Teens']),
+                child: _buildLevelDropdown(
+                  'Nivel', 
+                  _selectedLevel, 
+                  _enrolledLevels, 
+                  (level) => _filterCoursesByLevel(level),
+                )
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const AllTasksPage()),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.pink,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AllTasksPage())),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.pink, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)), padding: const EdgeInsets.symmetric(vertical: 14)),
                   child: const Text('Todas las Tareas', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          _buildDropdownButton('Programa', _selectedProgram, ['Youth Program A.1.1', 'Adult Program B.2']),
+          Container(
+            height: 48,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(color: const Color(0xFF213354), borderRadius: BorderRadius.circular(20)),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<EnrolledCourse>(
+                value: _selectedCourse,
+                isExpanded: true,
+                dropdownColor: const Color(0xFF334155),
+                icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+                style: const TextStyle(color: Colors.white, fontSize: 16),
+                hint: const Text('Selecciona un programa', style: TextStyle(color: Colors.white70)),
+                items: _filteredCourses.map((enrolledCourse) => DropdownMenuItem<EnrolledCourse>(
+                    value: enrolledCourse, 
+                    child: Text(enrolledCourse.subLevel.name)
+                )).toList(),
+                onChanged: (newValue) => _onCourseSelected(newValue),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
-
-  // Helper para crear los dropdowns con el estilo deseado
-  Widget _buildDropdownButton(String hint, String? value, List<String> items) {
-    return Container(
+  
+  Widget _buildLevelDropdown(String hint, EnglishLevel? value, List<EnglishLevel> items, Function(EnglishLevel?) onChanged) {
+     return Container(
       height: 48,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF213354),
-        borderRadius: BorderRadius.circular(20),
-      ),
+      decoration: BoxDecoration(color: const Color(0xFF213354), borderRadius: BorderRadius.circular(20)),
       child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
+        child: DropdownButton<EnglishLevel>(
           value: value,
           isExpanded: true,
           hint: Text(hint, style: TextStyle(color: Colors.white.withOpacity(0.8))),
+          style: const TextStyle(color: Colors.white, fontSize: 16),
           dropdownColor: const Color(0xFF334155),
           icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-          style: const TextStyle(color: Colors.white),
-          items: items.map((String item) {
-            return DropdownMenuItem<String>(
-              value: item,
-              child: Text(item),
-            );
-          }).toList(),
-          onChanged: (newValue) {},
+          items: items.map((level) => DropdownMenuItem<EnglishLevel>(value: level, child: Text(level.name))).toList(),
+          onChanged: onChanged,
         ),
       ),
     );
   }
 
-  // Helper para los títulos de sección
   Widget _buildSectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.only(top: 8, bottom: 8),
-      child: Text(
-        title,
-        style: const TextStyle(
-          color: Colors.pink,
-          fontSize: 22,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
+      child: Text(title, style: const TextStyle(color: Colors.pink, fontSize: 22, fontWeight: FontWeight.bold)),
     );
   }
 
-  // Construye las listas horizontales de tareas
-  Widget _buildTasksList(List<Map<String, dynamic>> tasks) {
+  Widget _buildTasksList(List<TaskWithSubmission> tasks) {
     if (tasks.isEmpty) {
-      return const SizedBox(
-        height: 100,
-        child: Center(child: Text("No hay tareas en esta sección.")),
-      );
+      return const SizedBox(height: 100, child: Center(child: Text("No hay tareas en esta sección.")));
     }
     return SizedBox(
       height: 250,
@@ -178,67 +243,44 @@ class _HomePageState extends State<HomePage> {
         scrollDirection: Axis.horizontal,
         itemCount: tasks.length,
         itemBuilder: (context, index) {
-          final task = tasks[index];
+          final taskWithSub = tasks[index];
+          Color cardColor;
+          switch (taskWithSub.submission.estado) {
+            case TaskStatus.notDelivered: cardColor = Colors.red.shade400; break;
+            case TaskStatus.pending: cardColor = Colors.orange.shade400; break;
+            case TaskStatus.graded: cardColor = const Color(0xFF334155); break;
+            case TaskStatus.done: cardColor = Colors.green.shade700; break;
+          }
           return HomeworkCard(
-            title: task['title'],
-            description: task['description'],
-            color: task['color'],
-            bottomLeftWidget: _buildCardBottomLeft(task['status'], task['score']),
-            bottomRightWidget: _buildCardBottomRight(task['hasComment'] ?? false, task['isStarred'] ?? false),
+            title: taskWithSub.task.titulo,
+            description: taskWithSub.task.descripcion,
+            color: cardColor,
+            bottomLeftWidget: _buildCardBottomLeft(taskWithSub.submission.estado, taskWithSub.submission.puntajeObtenido?.toStringAsFixed(1)),
+            bottomRightWidget: _buildCardBottomRight(false, false),
           );
         },
       ),
     );
   }
 
-  // ===== CAMBIO REALIZADO AQUÍ =====
-  // Helper para construir el widget de la esquina inferior izquierda de la tarjeta
   Widget _buildCardBottomLeft(TaskStatus status, String? score) {
     String text;
     Color textColor = Colors.black54;
-
     switch (status) {
-      case TaskStatus.notDelivered:
-        text = 'No Entregado';
-        textColor = Colors.red;
-        text += ' - 0/10';
-        break;
-      case TaskStatus.pending:
-        text = 'Pendiente';
-        break;
-      case TaskStatus.graded:
-        text = 'Entregada';
-        textColor = Colors.green;
-        text += ' - $score';
-        break;
-      case TaskStatus.done:
-        text = 'Entregada';
-        textColor = Colors.green;
-        text += ' - No Calificada';
-        break;
+      case TaskStatus.notDelivered: text = 'No Entregado'; textColor = Colors.red; break;
+      case TaskStatus.pending: text = 'Pendiente'; break;
+      case TaskStatus.graded: text = 'Calificada: ${score ?? 'N/A'}'; textColor = Colors.blue.shade800; break;
+      case TaskStatus.done: text = 'Entregada'; textColor = Colors.green.shade800; break;
     }
-    return Text(
-      text,
-      style: TextStyle(color: textColor, fontSize: 12, fontWeight: FontWeight.w600),
-    );
+    return Text(text, style: TextStyle(color: textColor, fontSize: 12, fontWeight: FontWeight.w600));
   }
-  // ===== FIN DEL CAMBIO =====
 
-  // Helper para construir el widget de la esquina inferior derecha de la tarjeta
   Widget _buildCardBottomRight(bool hasComment, bool isStarred) {
-    if (!hasComment && !isStarred) {
-      return const SizedBox.shrink(); // No muestra nada si no hay iconos que mostrar
-    }
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (hasComment)
-          const Icon(Icons.chat_bubble_outline_rounded, color: Colors.amber, size: 18),
-        if (hasComment && isStarred)
-          const SizedBox(width: 4),
-        if (isStarred)
-          const Icon(Icons.star_rounded, color: Colors.amber, size: 20),
-      ],
-    );
+    if (!hasComment && !isStarred) return const SizedBox.shrink();
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      if (hasComment) const Icon(Icons.chat_bubble_outline_rounded, color: Colors.amber, size: 18),
+      if (hasComment && isStarred) const SizedBox(width: 4),
+      if (isStarred) const Icon(Icons.star_rounded, color: Colors.amber, size: 20),
+    ]);
   }
 }

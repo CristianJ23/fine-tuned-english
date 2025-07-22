@@ -1,31 +1,20 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-// Se importa el modelo con el nombre correcto
-import 'package:app/presentation/models/usuarios.dart';
+import '../models/usuarios.dart';
 
-// Nombre estandarizado: AuthService
 class AuthService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-  // Usa el modelo correcto: UserModel
   static Usuarios? currentUser;
 
-  // INICIO DE SESIÓN (Prototipo)
-  Future<String?> signInWithEmailAndPassword({
-    required String email,
-    required String password,
-  }) async {
+  Future<String?> signInWithEmailAndPassword({ required String email, required String password }) async {
     try {
       final querySnapshot = await _firestore
           .collection('usuarios')
           .where('email', isEqualTo: email)
-          .where('password', isEqualTo: password) // Inseguro, solo para prototipo
-          .limit(1)
-          .get();
+          .where('password', isEqualTo: password)
+          .limit(1).get();
 
       if (querySnapshot.docs.isNotEmpty) {
-        final userDoc = querySnapshot.docs.first;
-        currentUser = Usuarios.fromFirestore(userDoc); // Crea un UserModel
+        currentUser = Usuarios.fromFirestore(querySnapshot.docs.first);
         return null;
       } else {
         return 'Correo electrónico o contraseña incorrectos.';
@@ -35,7 +24,10 @@ class AuthService {
     }
   }
 
-  // REGISTRO DE ESTUDIANTE (Prototipo)
+  Future<void> signOut() async {
+    currentUser = null;
+  }
+
   Future<String?> registerStudent({
     required String email,
     required String password,
@@ -69,8 +61,7 @@ class AuthService {
     }
   }
 
-  // CIERRE DE SESIÓN (Prototipo)
-  Future<void> signOut() async {
-    currentUser = null;
+  static Usuarios? get currentUserStatic {
+    return currentUser;
   }
 }

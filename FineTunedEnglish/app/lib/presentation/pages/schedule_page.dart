@@ -1,15 +1,64 @@
 import 'package:flutter/material.dart';
+import '../models/english_level.dart';
+import '../models/sub_level.dart';
+import '../models/usuarios.dart'; 
+import '../services/auth_service.dart';
+import '../services/level_service.dart';
 import '../widgets/shared_footer.dart';
 
 class SchedulePage extends StatefulWidget {
   const SchedulePage({super.key});
-
   @override
   State<SchedulePage> createState() => _SchedulePageState();
 }
 
 class _SchedulePageState extends State<SchedulePage> {
-  String _selectedProgram = 'youth_program';
+  final LevelService _levelService = LevelService();
+  late Usuarios _currentUser;
+
+  List<EnglishLevel> _availableLevels = [];
+  EnglishLevel? _selectedLevel;
+  
+  List<SubLevel> _subLevels = [];
+  bool _isLoadingLevels = true;
+  bool _isLoadingSubLevels = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialData();
+  }
+  
+  Future<void> _loadInitialData() async {
+    _currentUser = AuthService.currentUser!;
+    
+    final levels = await _levelService.getAvailableLevels(_currentUser.fechaNacimiento);
+    if (mounted) {
+      setState(() {
+        _availableLevels = levels;
+        _isLoadingLevels = false;
+        if (levels.isNotEmpty) {
+          _onLevelSelected(levels.first);
+        }
+      });
+    }
+  }
+
+  Future<void> _onLevelSelected(EnglishLevel? level) async {
+    if (level == null || level == _selectedLevel) return;
+    setState(() {
+      _selectedLevel = level;
+      _isLoadingSubLevels = true;
+      _subLevels = [];
+    });
+    final subLevels = await _levelService.getSubLevelsForLevel(level.id);
+    if (mounted) {
+      setState(() {
+        _subLevels = subLevels;
+        _isLoadingSubLevels = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,147 +68,104 @@ class _SchedulePageState extends State<SchedulePage> {
         backgroundColor: const Color(0xFF213354),
         title: const Text('Horarios', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
         iconTheme: const IconThemeData(color: Colors.white),
+        automaticallyImplyLeading: false,
         leading: const SizedBox.shrink(),
         leadingWidth: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.undo, size: 28),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
+          IconButton(icon: const Icon(Icons.undo, size: 28), onPressed: () => Navigator.of(context).pop()),
           const SizedBox(width: 10),
         ],
         elevation: 0,
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildProgramSelector(),
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                children: [
-                  _buildScheduleCard(
-                    title: 'Paralelo A',
-                    titleColor: Colors.redAccent,
-                    iconColor: Colors.redAccent,
-                    scheduleDays: 'Lunes a Viernes',
-                    scheduleHours: '17:00 - 19:00',
-                    availableSlots: 12,
-                    totalSlots: 16,
+      body: _isLoadingLevels
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                _buildProgramSelector(),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: _isLoadingSubLevels 
+                        ? const Center(child: Padding(padding: EdgeInsets.all(32.0), child: CircularProgressIndicator()))
+                        : _buildSubLevelsList(),
+                    ),
                   ),
-                  const SizedBox(height: 20),
-                   _buildScheduleCard(
-                    title: 'Paralelo B',
-                    titleColor: Colors.blueAccent,
-                    iconColor: Colors.blueAccent,
-                    scheduleDays: 'Lunes a Viernes',
-                    scheduleHours: '15:00 - 17:00',
-                    availableSlots: 16,
-                    totalSlots: 16,
-                  ),
-                  const SizedBox(height: 30),
-                  _buildBenefitsSection(),
-                ],
-              ),
-            )
-          ],
-        ),
-      ),
+                ),
+              ],
+            ),
       bottomNavigationBar: const SharedFooter(),
     );
   }
 
-    Widget _buildProgramSelector() {
+  Widget _buildProgramSelector() {
     return Container(
       color: const Color(0xFF213354),
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
-      
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 50,
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.white54, width: 1),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: _selectedProgram,
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedProgram = newValue!;
-                  });
-                },
-                isExpanded: true,
-                icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-                dropdownColor: const Color(0xFF334155),
-                items: const [
-                  DropdownMenuItem(
-                    value: 'youth_program',
-                    child: Text(
-                      'A.1.1 YOUTH PROGRAM',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          
-          const SizedBox(height: 6),
-          Padding(
-            padding: const EdgeInsets.only(left: 4.0),
-            child: Text(
-              'Octubre 2025 - Febrero 2026',
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.8),
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ],
+      child: DropdownButtonFormField<EnglishLevel>(
+        value: _selectedLevel,
+        onChanged: _onLevelSelected,
+        isExpanded: true,
+        dropdownColor: const Color(0xFF334155),
+        icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: const Color(0xFF213354),
+          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Colors.white54)),
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Colors.white)),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        ),
+        items: _availableLevels.map((level) {
+          return DropdownMenuItem(
+            value: level,
+            child: Text(level.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          );
+        }).toList(),
+        hint: const Text('Selecciona un Nivel', style: TextStyle(color: Colors.white70)),
       ),
     );
   }
 
-  Widget _buildScheduleCard({
-    required String title,
-    required Color titleColor,
-    required Color iconColor,
-    required String scheduleDays,
-    required String scheduleHours,
-    required int availableSlots,
-    required int totalSlots,
-  }) {
-    double progress = availableSlots > 0 ? (totalSlots - availableSlots) / totalSlots : 1.0;
+  Widget _buildSubLevelsList() {
+    if (_subLevels.isEmpty && !_isLoadingSubLevels) {
+      return const Center(child: Padding(
+        padding: EdgeInsets.all(32.0),
+        child: Text('No hay cursos disponibles para el nivel seleccionado.', textAlign: TextAlign.center,),
+      ));
+    }
+    return ListView.separated(
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      itemCount: _subLevels.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 20),
+      itemBuilder: (context, index) {
+        final subLevel = _subLevels[index];
+        return _buildScheduleCard(subLevel: subLevel, levelId: _selectedLevel!.id);
+      },
+    );
+  }
 
+  Widget _buildScheduleCard({required SubLevel subLevel, required String levelId}) {
+    Color cardColor = subLevel.cuposDisponibles > 5 ? Colors.blueAccent : Colors.redAccent;
+    double progress = subLevel.cuposTotales > 0 ? (subLevel.cuposTotales - subLevel.cuposDisponibles) / subLevel.cuposTotales : 1.0;
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF213354),
-        borderRadius: BorderRadius.circular(20),
-      ),
+      decoration: BoxDecoration(color: const Color(0xFF213354), borderRadius: BorderRadius.circular(20)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(title, style: TextStyle(color: titleColor, fontSize: 24, fontWeight: FontWeight.bold)),
+          Text(subLevel.name, style: TextStyle(color: cardColor, fontSize: 24, fontWeight: FontWeight.bold)),
           const SizedBox(height: 20),
-          _buildCardInfoRow(Icons.calendar_today_outlined, scheduleDays, scheduleHours),
+          _buildCardInfoRow(Icons.calendar_today_outlined, subLevel.dias, subLevel.horas),
           const SizedBox(height: 16),
-          _buildCardInfoRow(Icons.people_outline, '$availableSlots Cupos Disponibles', '', iconColor: iconColor),
+          _buildCardInfoRow(Icons.people_outline, '${subLevel.cuposDisponibles} Cupos Disponibles', '', iconColor: cardColor),
           const SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
             child: LinearProgressIndicator(
               value: progress,
               backgroundColor: Colors.grey.shade600,
-              valueColor: AlwaysStoppedAnimation<Color>(iconColor),
+              valueColor: AlwaysStoppedAnimation<Color>(cardColor),
               minHeight: 8,
               borderRadius: BorderRadius.circular(4),
             ),
@@ -168,17 +174,19 @@ class _SchedulePageState extends State<SchedulePage> {
             alignment: Alignment.centerRight,
             child: Padding(
               padding: const EdgeInsets.only(right: 40, top: 4),
-              child: Text('$totalSlots Total', style: TextStyle(color: Colors.grey[400], fontSize: 12)),
+              child: Text('${subLevel.cuposTotales} Total', style: TextStyle(color: Colors.grey[400], fontSize: 12)),
             ),
           ),
           const SizedBox(height: 20),
           OutlinedButton(
             onPressed: () {
               final scheduleData = {
-                'name': title,
-                'days': scheduleDays,
-                'hours': scheduleHours,
-                'cost': 250.00,
+                'id': subLevel.id,
+                'levelId': levelId,
+                'name': subLevel.name,
+                'days': subLevel.dias,
+                'hours': subLevel.horas,
+                'cost': subLevel.costo,
               };
               Navigator.of(context).pop(scheduleData);
             },
@@ -203,46 +211,9 @@ class _SchedulePageState extends State<SchedulePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(line1, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-            if (line2.isNotEmpty) 
-              Text(line2, style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14)),
+            if (line2.isNotEmpty) Text(line2, style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14)),
           ],
         ),
-      ],
-    );
-  }
-
-  Widget _buildBenefitsSection() {
-    return Column(
-      children: [
-        const Text(
-          'Obtendras',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 20),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildBenefitItem(Icons.phone_android, 'Acceso al\nApp Movil'),
-            _buildBenefitItem(Icons.workspace_premium_outlined, 'Certificado al finalizar\nel programa'),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBenefitItem(IconData icon, String text) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade200,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: Colors.grey.shade600, size: 30),
-        ),
-        const SizedBox(height: 8),
-        Text(text, textAlign: TextAlign.center, style: TextStyle(color: Colors.grey.shade700)),
       ],
     );
   }

@@ -1,19 +1,46 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Representative {
-  final String firstName;
-  final String lastName;
+  final String id;
+  final String nombres;
+  final String apellidos;
   final String email;
-  final String idNumber;
-  final String phone;
-  final String educationLevel;
-  final DateTime birthDate;
+  final String numeroCedula;
+  final String telefono;
+  final DateTime fechaNacimiento;
 
   Representative({
-    required this.firstName,
-    required this.lastName,
+    required this.id,
+    required this.nombres,
+    required this.apellidos,
     required this.email,
-    required this.idNumber,
-    required this.phone,
-    required this.educationLevel,
-    required this.birthDate,
+    required this.numeroCedula,
+    required this.telefono,
+    required this.fechaNacimiento,
   });
+
+  factory Representative.fromFirestore(DocumentSnapshot doc) {
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    return Representative(
+      id: doc.id,
+      nombres: data['nombres'] ?? '',
+      apellidos: data['apellidos'] ?? '',
+      email: data['email'] ?? '',
+      numeroCedula: data['numeroCedula'] ?? '',
+      telefono: data['telefono'] ?? '',
+      fechaNacimiento: (data['fechaNacimiento'] as Timestamp?)?.toDate() ?? DateTime.now(),
+    );
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'nombres': nombres,
+      'apellidos': apellidos,
+      'email': email,
+      'numeroCedula': numeroCedula,
+      'telefono': telefono,
+      'fechaNacimiento': Timestamp.fromDate(fechaNacimiento),
+      'rol': 'representante', // Asigna el rol automáticamente
+    };
+  }
 }
