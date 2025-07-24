@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
+import '../models/usuarios.dart';
 import '../pages/payment_page.dart';
-import '../pages/login_page.dart'; // 👈 Import para redirigir al LoginPage
+import '../pages/login_page.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -66,19 +68,28 @@ class AppDrawer extends StatelessWidget {
   }
 
   Widget _buildDrawerHeader(BuildContext context) {
+    final Usuarios? currentUser = AuthService.currentUser;
+    final String displayName = currentUser != null ? '${currentUser.nombres} ${currentUser.apellidos}' : 'Invitado';
+    final String displayEmail = currentUser?.email ?? 'No autenticado';
+    
+    // Opcional: Define una imagen por defecto
+    final ImageProvider displayImage = const AssetImage('assets/splash/app_icon.png');
+
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 60, 20, 30),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const CircleAvatar(
+          CircleAvatar(
             radius: 40,
-            backgroundImage: AssetImage('assets/splash/app_icon.png'), // 👈 Imagen actualizada
+            backgroundImage: displayImage,
+            backgroundColor: Colors.white.withOpacity(0.1),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'Hi, Crista Jimines', // 👈 Nombre actualizado
-            style: TextStyle(
+          Text(
+            displayName,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -86,7 +97,7 @@ class AppDrawer extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'crista.jimines@email.com',
+            displayEmail,
             style: TextStyle(
               color: Colors.white.withOpacity(0.7),
               fontSize: 14,
@@ -121,12 +132,15 @@ class AppDrawer extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: ElevatedButton.icon(
-        onPressed: () {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => const LoginPage()),
-                (Route<dynamic> route) => false,
-          );
+        onPressed: () async {
+          await AuthService().signOut();
+          if (context.mounted) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const LoginPage()),
+                  (Route<dynamic> route) => false,
+            );
+          }
         },
         icon: const Icon(Icons.exit_to_app_rounded, color: Colors.white),
         label: const Text(

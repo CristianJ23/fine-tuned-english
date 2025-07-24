@@ -1,40 +1,37 @@
 import 'package:flutter/material.dart';
-// Asegúrate de que esta ruta sea correcta para tu proyecto.
-// Reemplaza 'app' por el nombre de tu paquete en pubspec.yaml si es diferente.
-import 'package:app/presentation/pages/task_detail_page.dart';
+import '../models/task.dart' as task_model;
+import '../models/task_submission.dart';
+import '../services/task_service.dart';
+import '../pages/task_detail_page.dart';
 
-// 1. Enum actualizado con el nuevo estado
 enum TaskStatus { notDelivered, pending, done, graded }
 
 class TaskListItem extends StatelessWidget {
-  final String title;
-  final String description;
-  final String? score;
-  final String statusText;
-  final TaskStatus status;
+  final TaskWithSubmission taskWithSubmission;
+  final VoidCallback onTaskUpdated;
 
   const TaskListItem({
     super.key,
-    required this.title,
-    required this.description,
-    this.score,
-    this.statusText = '',
-    required this.status,
+    required this.taskWithSubmission,
+    required this.onTaskUpdated,
   });
 
   @override
   Widget build(BuildContext context) {
+    final task_model.Task task = taskWithSubmission.task;
+    final TaskSubmission submission = taskWithSubmission.submission;
+
     return InkWell(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        final bool? shouldRefresh = await Navigator.push<bool>(
           context,
           MaterialPageRoute(
-            builder: (context) => TaskDetailPage(
-              taskTitle: title,
-              initialStatus: status,
-            ),
+            builder: (context) => TaskDetailPage(taskWithSubmission: taskWithSubmission),
           ),
         );
+        if (shouldRefresh == true) {
+          onTaskUpdated();
+        }
       },
       child: Card(
         elevation: 2.0,
@@ -49,18 +46,20 @@ class TaskListItem extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text(task.titulo, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
-                    Text(description, style: const TextStyle(color: Colors.black54, fontSize: 14)),
-                    if (score != null) ...[
+                    Text(task.descripcion, style: const TextStyle(color: Colors.black54, fontSize: 14), maxLines: 2, overflow: TextOverflow.ellipsis),
+                    if (submission.puntajeObtenido != null) ...[
                       const SizedBox(height: 4),
-                      Text(score!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                      Text(
+                          '${submission.puntajeObtenido?.toStringAsFixed(1)} / ${task.puntajeDisponible.toStringAsFixed(0)}',
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                     ],
                   ],
                 ),
               ),
               const SizedBox(width: 16),
-              _buildStatusWidget(),
+              _buildStatusWidget(submission),
             ],
           ),
         ),
@@ -68,67 +67,51 @@ class TaskListItem extends StatelessWidget {
     );
   }
 
-  // 2. Widget de estado actualizado
-  Widget _buildStatusWidget() {
-    switch (status) {
-      // ===== NUEVO CASO PARA 'NO ENTREGADO' =====
-      case TaskStatus.notDelivered:
-        return Column(
-          children: [
-            const Icon(Icons.error_outline, color: Colors.red), // Ícono de error en rojo
-            const SizedBox(height: 4),
-            Text(
-              statusText,
-              style: const TextStyle(fontSize: 12, color: Colors.red, fontWeight: FontWeight.bold), // Texto en rojo y negrita
-            ),
-            const SizedBox(height: 4),
-            const Row(
-              children: [
-                Icon(Icons.chat_bubble_outline_rounded, color: Colors.amber, size: 16),
-                SizedBox(width: 4),
-                Text('Presentar', style: TextStyle(color: Colors.pink, fontWeight: FontWeight.bold)),
-              ],
-            )
-          ],
-        );
+  Widget _buildStatusWidget(TaskSubmission submission) {
+    String statusText = '';
 
-      // CASO PARA 'PENDIENTE'
-      case TaskStatus.pending:
-        return Column(
-          children: [
-            const Icon(Icons.watch_later_outlined, color: Colors.grey),
-            const SizedBox(height: 4),
-            Text(statusText, style: const TextStyle(fontSize: 12, color: Colors.black54)),
-            const SizedBox(height: 4),
-            const Row(
-              children: [
-                Icon(Icons.chat_bubble_outline_rounded, color: Colors.amber, size: 16),
-                SizedBox(width: 4),
-                Text('Presentar', style: TextStyle(color: Colors.pink, fontWeight: FontWeight.bold)),
-              ],
-            )
-          ],
-        );
+    switch (submission.estado) {
+      case TaskStatus.notDelivered:
+        statusText = 'No Entregado';
+        return _statusColumn(Icons.error_outline, statusText, Colors.red);
       
-      // CASO PARA 'DONE' (Entregado sin calificar)
+      case TaskStatus.pending:
+        statusText = 'Pendiente';
+        return _statusColumn(Icons.watch_later_outlined, statusText, Colors.grey);
+        
       case TaskStatus.done:
         return const Icon(Icons.check_circle_outline, color: Colors.green, size: 28);
-      
-      // CASO PARA 'GRADED' (Entregado y calificado)
+        
       case TaskStatus.graded:
-         return Column(
+        return Column(
           children: [
             const Icon(Icons.check_circle, color: Colors.blue, size: 28),
             const SizedBox(height: 4),
-            const Row(
-              children: [
-                Icon(Icons.chat_bubble_outline_rounded, color: Colors.amber, size: 16),
-                SizedBox(width: 4),
-                Text('Presentar', style: TextStyle(color: Colors.pink, fontWeight: FontWeight.bold)),
-              ],
-            )
+            Row(children: [
+              Icon(Icons.chat_bubble_outline_rounded, color: Colors.amber.shade700, size: 16),
+              const SizedBox(width: 4),
+              const Text('Revisar', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 12)),
+            ]),
           ],
         );
     }
+  }
+
+  Widget _statusColumn(IconData icon, String text, Color color) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 28),
+        const SizedBox(height: 4),
+        Text(text, style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 4),
+        const Row(
+          children: [
+            Icon(Icons.remove_red_eye_outlined, color: Colors.pink, size: 16),
+            SizedBox(width: 4),
+            Text('Presentar', style: TextStyle(color: Colors.pink, fontWeight: FontWeight.bold, fontSize: 12)),
+          ],
+        )
+      ],
+    );
   }
 }

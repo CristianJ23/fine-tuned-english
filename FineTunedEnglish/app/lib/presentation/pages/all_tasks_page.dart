@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:app/presentation/widgets/task_list_item.dart';
+import '../models/enrolled_course.dart';
+import '../models/english_level.dart';
+import '../services/auth_service.dart';
+import '../services/inscription_service.dart';
+import '../services/task_service.dart';
+import '../widgets/task_list_item.dart';
 
 class AllTasksPage extends StatefulWidget {
   const AllTasksPage({super.key});
@@ -9,121 +14,216 @@ class AllTasksPage extends StatefulWidget {
 }
 
 class _AllTasksPageState extends State<AllTasksPage> {
-  String? _selectedProgramType;
-  String? _selectedProgram;
+  final InscriptionService _inscriptionService = InscriptionService();
+  final TaskService _taskService = TaskService();
 
-  final List<Map<String, dynamic>> tasksData = [
-    {
-      'title': 'Final Project',
-      'description': 'Entregar el proyecto final del curso.',
-      'status': TaskStatus.notDelivered, 'statusText': 'No Entregado'
-    },
-    {
-      'title': 'Present Tense Exercise',
-      'description': 'Choose the correct word in the present tense.',
-      'status': TaskStatus.pending, 'statusText': 'Pendiente'
-    },
-    {
-      'title': 'Verb To Be',
-      'description': 'Research about verb to be and to use it.',
-      'status': TaskStatus.graded, 'score': '10/10'
-    },
-    {
-      'title': 'Reading Comprehension',
-      'description': 'Read chapter 5 and summarize.',
-      'status': TaskStatus.done
-    },
-  ];
+  bool _isLoading = true;
+  String? _errorMessage;
+  
+  List<EnrolledCourse> _allEnrolledCourses = [];
+  List<EnglishLevel> _enrolledLevels = [];
+  EnglishLevel? _selectedLevel;
+  
+  List<EnrolledCourse> _filteredCourses = [];
+  EnrolledCourse? _selectedCourse;
 
+  List<TaskWithSubmission> _currentTasks = [];
+  
   @override
-  Widget build(BuildContext context) {
-    tasksData.sort((a, b) {
+  void initState() {
+    super.initState();
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    if (!mounted) return;
+    setState(() { _isLoading = true; });
+
+    final studentId = AuthService.currentUser?.id;
+    if (studentId == null) {
+      if (mounted) setState(() { _isLoading = false; _errorMessage = "Usuario no autenticado."; });
+      return;
+    }
+    
+    final courses = await _inscriptionService.getEnrolledCoursesForStudent(studentId);
+    if (mounted) {
+      final uniqueLevels = <String, EnglishLevel>{};
+      for (var course in courses) { uniqueLevels[course.level.id] = course.level; }
+
+      setState(() {
+        _allEnrolledCourses = courses;
+        _enrolledLevels = uniqueLevels.values.toList();
+        
+        if (courses.isNotEmpty) {
+          final latestCourse = courses.first;
+          _selectedLevel = latestCourse.level;
+          _filterCoursesByLevel(_selectedLevel, setDefaultCourse: latestCourse);
+        } else {
+          _isLoading = false;
+        }
+      });
+    }
+  }
+  
+  void _filterCoursesByLevel(EnglishLevel? level, {EnrolledCourse? setDefaultCourse}) {
+    if (!mounted) return;
+    setState(() {
+      _selectedLevel = level;
+      if (level == null) {
+        _filteredCourses = List.from(_allEnrolledCourses);
+        _selectedCourse = null;
+        _loadAllTasks();
+      } else {
+        _filteredCourses = _allEnrolledCourses.where((c) => c.level.id == level.id).toList();
+        if (_filteredCourses.isNotEmpty) {
+          final courseToSelect = setDefaultCourse ?? _filteredCourses.first;
+          if (_filteredCourses.contains(courseToSelect)) {
+            _onCourseSelected(courseToSelect);
+          } else {
+            _onCourseSelected(_filteredCourses.first);
+          }
+        } else {
+          _selectedCourse = null;
+          _currentTasks = [];
+        }
+      }
+    });
+  }
+
+  Future<void> _onCourseSelected(EnrolledCourse? course) async {
+    if (course == _selectedCourse && !_isLoading) return;
+    
+    if (!mounted) return;
+    setState(() {
+      _selectedCourse = course;
+      _isLoading = true;
+    });
+    
+    await _loadAllTasks(specificCourse: course); 
+  }
+
+  Future<void> _loadAllTasks({EnrolledCourse? specificCourse}) async {
+    if (!mounted) return;
+    List<TaskWithSubmission> allTasks = [];
+    final studentId = AuthService.currentUser!.id;
+    
+    final coursesToFetch = specificCourse != null ? [specificCourse] : _allEnrolledCourses;
+    
+    for (var course in coursesToFetch) {
+      final tasks = await _taskService.getTasksForInscription(course.inscription.id, studentId);
+      allTasks.addAll(tasks);
+    }
+    
+    allTasks.sort((a, b) {
       int score(TaskStatus status) {
         if (status == TaskStatus.pending) return 0;
         if (status == TaskStatus.notDelivered) return 1;
-        return 2; 
+        return 2;
       }
-      return score(a['status']).compareTo(score(b['status']));
+      return score(a.submission.estado).compareTo(score(b.submission.estado));
     });
 
-    List<Widget> taskWidgets = tasksData.map((taskData) {
-      return TaskListItem(
-        title: taskData['title'],
-        description: taskData['description'],
-        status: taskData['status'],
-        score: taskData['score'],
-        statusText: taskData['statusText'] ?? '',
-      );
-    }).toList();
-
+    if(mounted) {
+      setState(() { 
+        _currentTasks = allTasks;
+        _isLoading = false;
+      });
+    }
+  }
+  
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: const Text('Todas Las Tareas', style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF213354),
         iconTheme: const IconThemeData(color: Colors.white),
-        
       ),
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            backgroundColor: Colors.grey[100],
-            pinned: true,
-            automaticallyImplyLeading: false,
-            expandedHeight: 130,
-            toolbarHeight: 130,
-            flexibleSpace: FlexibleSpaceBar(
-              background: _buildFilters(),
+      body: RefreshIndicator(
+        onRefresh: _loadInitialData,
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              backgroundColor: Colors.grey[100], pinned: true, automaticallyImplyLeading: false,
+              expandedHeight: 130, toolbarHeight: 130,
+              flexibleSpace: FlexibleSpaceBar(background: _buildFilters()),
             ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate(taskWidgets),
-            ),
-          ),
-        ],
+            if (_isLoading)
+              const SliverFillRemaining(child: Center(child: CircularProgressIndicator()))
+            else if (_errorMessage != null)
+              SliverFillRemaining(child: Center(child: Text(_errorMessage!)))
+            else if (_currentTasks.isEmpty)
+              const SliverFillRemaining(child: Center(child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text("No hay tareas para la selección actual.", textAlign: TextAlign.center),
+              )))
+            else
+              SliverPadding(
+                padding: const EdgeInsets.all(16.0),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => TaskListItem(
+                      taskWithSubmission: _currentTasks[index],
+                      onTaskUpdated: _loadInitialData,
+                    ),
+                    childCount: _currentTasks.length,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
-
+  
   Widget _buildFilters() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _buildDropdownButton('Tipo de Programa', _selectedProgramType, ['Kids', 'Teens']),
+          _buildLevelDropdown('Nivel', _selectedLevel, _enrolledLevels, (level) => _filterCoursesByLevel(level)),
           const SizedBox(height: 10),
-          _buildDropdownButton('Programa', _selectedProgram, ['Youth Program A.1.1', 'Adult Program B.2']),
+          _buildCourseDropdown('Programa', _selectedCourse, _filteredCourses, (course) => _onCourseSelected(course)),
         ],
       ),
     );
   }
   
-  Widget _buildDropdownButton(String hint, String? value, List<String> items) {
+  Widget _buildLevelDropdown(String hint, EnglishLevel? value, List<EnglishLevel> items, Function(EnglishLevel?) onChanged) {
     return Container(
       height: 48,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF213354),
-        borderRadius: BorderRadius.circular(20),
-      ),
+      decoration: BoxDecoration(color: const Color(0xFF213354), borderRadius: BorderRadius.circular(20)),
       child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: value,
-          isExpanded: true,
+        child: DropdownButton<EnglishLevel>(
+          value: value, isExpanded: true,
           hint: Text(hint, style: TextStyle(color: Colors.white.withOpacity(0.8))),
           dropdownColor: const Color(0xFF334155),
           icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
           style: const TextStyle(color: Colors.white, fontSize: 16),
-          items: items.map((String item) {
-            return DropdownMenuItem<String>(
-              value: item,
-              child: Text(item),
-            );
-          }).toList(),
-          onChanged: (newValue) {},
+          items: items.map((item) => DropdownMenuItem<EnglishLevel>(value: item, child: Text(item.name))).toList(),
+          onChanged: onChanged,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCourseDropdown(String hint, EnrolledCourse? value, List<EnrolledCourse> items, Function(EnrolledCourse?) onChanged) {
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(color: const Color(0xFF213354), borderRadius: BorderRadius.circular(20)),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<EnrolledCourse>(
+          value: value, isExpanded: true,
+          hint: Text(hint, style: TextStyle(color: Colors.white.withOpacity(0.8))),
+          dropdownColor: const Color(0xFF334155),
+          icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+          style: const TextStyle(color: Colors.white, fontSize: 16),
+          items: items.map((item) => DropdownMenuItem<EnrolledCourse>(value: item, child: Text(item.subLevel.name))).toList(),
+          onChanged: onChanged,
         ),
       ),
     );
