@@ -1,9 +1,9 @@
 {
   "build": {
     "env": {
-      "FLUTTER_VERSION": "1.0.0+1"
+      "FLUTTER_VERSION": "3.22.2"
     },
-    "command": "git clone https://github.com/flutter/flutter.git --depth 1 -b stable /usr/local/flutter && export PATH=\"$PATH:/usr/local/flutter/bin\" && flutter build web --release",
+    "command": "https://github.com/CristianJ23/fine-tuned-english.git --depth 1 -b stable /usr/local/flutter && export PATH=\"$PATH:/usr/local/flutter/bin\" && flutter build web --release",
     "outputDirectory": "build/web"
   },
   "rewrites": [
