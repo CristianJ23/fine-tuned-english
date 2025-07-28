@@ -3,6 +3,7 @@ import '../services/auth_service.dart';
 import '../models/usuarios.dart';
 import '../pages/payment_page.dart';
 import '../pages/login_page.dart';
+import '../pages/certificates_page.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -47,7 +48,7 @@ class AppDrawer extends StatelessWidget {
                 ),
                 _buildDrawerItem(
                   icon: Icons.account_balance_outlined,
-                  text: 'Matrícula',
+                  text: 'Matrículassss',
                   buttonColor: buttonColor,
                   onTap: () {
                     Navigator.pop(context);
@@ -56,6 +57,19 @@ class AppDrawer extends StatelessWidget {
                       MaterialPageRoute(builder: (context) => const PaymentPage()),
                     );
                   },
+                ),
+                _buildDrawerItem(
+                  icon: Icons.school_outlined,
+                  text: 'Certificados',
+                  buttonColor: buttonColor,
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const CertificatePage()),
+                    );
+                  },
+
                 ),
               ],
             ),
