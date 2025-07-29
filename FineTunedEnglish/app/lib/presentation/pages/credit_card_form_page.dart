@@ -2,51 +2,15 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-// ----- CLASES DE FORMATEO PERSONALIZADAS -----
-// Estas clases ayudan a mejorar la experiencia del usuario al introducir los datos.
-
-/// Formatea el número de la tarjeta añadiendo espacios cada 4 dígitos.
-class CardNumberInputFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
-    if (newValue.selection.baseOffset == 0) {
-      return newValue;
-    }
-    String enteredData = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
-    StringBuffer buffer = StringBuffer();
-    for (int i = 0; i < enteredData.length; i++) {
-      buffer.write(enteredData[i]);
-      if ((i + 1) % 4 == 0 && i != enteredData.length - 1) {
-        buffer.write(' ');
-      }
-    }
-    String result = buffer.toString();
-    return TextEditingValue(
-      text: result,
-      selection: TextSelection.collapsed(offset: result.length),
-    );
-  }
-}
-
-/// Convierte el texto introducido a mayúsculas.
-class UpperCaseTextFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
-    return TextEditingValue(
-      text: newValue.text.toUpperCase(),
-      selection: newValue.selection,
-    );
-  }
-}
-
+import 'package:flutter_credit_card/flutter_credit_card.dart'; // Importar el paquete principal
+import 'package:flutter_credit_card/credit_card_brand.dart'; // Importar CreditCardBrand explícitamente
 
 // --- WIDGET PRINCIPAL ---
 
 class CreditCardFormPage extends StatefulWidget {
   // Recibe los datos del horario para mostrar el costo total.
   final Map<String, dynamic> scheduleData;
-  
+
   const CreditCardFormPage({super.key, required this.scheduleData});
 
   @override
@@ -54,18 +18,52 @@ class CreditCardFormPage extends StatefulWidget {
 }
 
 class _CreditCardFormPageState extends State<CreditCardFormPage> {
-  final _formKey = GlobalKey<FormState>();
+  // Clave global para el formulario de la tarjeta de crédito
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
-  /// Valida el formulario y, si es correcto, regresa a la página anterior
-  /// enviando 'true' para indicar que los datos se han "guardado".
-  void _saveCardAndReturn() {
+  // Variables de estado para los datos de la tarjeta
+  String cardNumber = '';
+  String expiryDate = '';
+  String cardHolderName = '';
+  String cvvCode = '';
+  bool isCvvFocused = false; // Para controlar la vista trasera de la tarjeta
+
+  /// Valida el formulario y, si es correcto, simula un pago mostrando un diálogo.
+  void _processPayment() {
     // Si el formulario no es válido, se detiene y muestra los errores.
-    if (!_formKey.currentState!.validate()) {
-      return; 
+    if (!formKey.currentState!.validate()) {
+      return;
     }
-    
-    // Si el formulario ES válido, cierra esta página y devuelve 'true'.
-    Navigator.of(context).pop(true); 
+
+    // Si el formulario ES válido, simula el pago y muestra un diálogo.
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Pago Simulado"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text("¡El pago ha sido procesado exitosamente!"),
+            const SizedBox(height: 10),
+            Text("Número de Tarjeta: $cardNumber"),
+            Text("Fecha de Expiración: $expiryDate"),
+            Text("Titular: $cardHolderName"),
+            Text("CVV: $cvvCode"),
+            Text("Total Pagado: \$${widget.scheduleData['cost']?.toStringAsFixed(2) ?? '0.00'}"),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Cierra el diálogo
+              Navigator.of(context).pop(true); // Regresa a la página anterior indicando éxito
+            },
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -80,159 +78,89 @@ class _CreditCardFormPageState extends State<CreditCardFormPage> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildCreditCardPreview(),
-              const SizedBox(height: 40),
-              _buildCardInfoForm(),
-              const SizedBox(height: 30),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text("Total", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
-                  Text("\$${widget.scheduleData['cost']?.toStringAsFixed(2) ?? '0.00'}", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                ],
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _saveCardAndReturn,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF213354),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                child: const Text("Guardar Tarjeta", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Widget que muestra una vista previa estática de una tarjeta de crédito.
-  Widget _buildCreditCardPreview() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF213354), Color(0xFF0D1E3A)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text("**** **** **** ****", style: TextStyle(color: Colors.white, fontSize: 22, letterSpacing: 2)),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text("Nombre", style: TextStyle(color: Colors.white70, fontSize: 12)),
-                  Text("Titular de la Tarjeta", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                ], 
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                   Text("Expira", style: TextStyle(color: Colors.white70, fontSize: 12)),
-                   Text("00/00", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                ],
-              )
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Widget que construye los campos de texto del formulario de la tarjeta.
-  Widget _buildCardInfoForm() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text("Número de tarjeta", style: TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        TextFormField(
-          decoration: const InputDecoration(border: OutlineInputBorder(), hintText: "1234 5678 9023 4567", prefixIcon: Icon(Icons.credit_card)),
-          keyboardType: TextInputType.number,
-          inputFormatters: [
-            LengthLimitingTextInputFormatter(19), // 16 dígitos + 3 espacios
-            CardNumberInputFormatter(),
-          ],
-          validator: (value) {
-            if (value == null || value.isEmpty) return "Campo requerido";
-            final number = value.replaceAll(' ', '');
-            if (number.length < 16) return "Número de tarjeta incompleto";
-            return null;
-          },
-        ),
-        const SizedBox(height: 16),
-        const Text("Titular de la Tarjeta", style: TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        TextFormField(
-          decoration: const InputDecoration(border: OutlineInputBorder(), hintText: "NOMBRE APELLIDO", prefixIcon: Icon(Icons.person)),
-          inputFormatters: [
-            UpperCaseTextFormatter(),
-          ],
-           validator: (value) => (value == null || value.isEmpty) ? "Campo requerido" : null,
-        ),
-        const SizedBox(height: 16),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              flex: 2,
-              child: TextFormField(
-                decoration: const InputDecoration(border: OutlineInputBorder(), labelText: "Exp. Año", hintText: "YYYY"),
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(4)],
-                validator: (value) {
-                   if (value == null || value.isEmpty) return "Requerido";
-                   if (value.length < 4) return "Inválido";
-                   final currentYear = DateTime.now().year;
-                   if (int.parse(value) < currentYear) return "Expirada";
-                   return null;
-                },
+            // Vista previa de la tarjeta de crédito (actualiza con los datos)
+            CreditCardWidget(
+              cardNumber: cardNumber,
+              expiryDate: expiryDate,
+              cardHolderName: cardHolderName,
+              cvvCode: cvvCode,
+              showBackView: isCvvFocused, // Muestra la parte trasera si el CVV está enfocado
+              cardBgColor: const Color(0xFF213354), // Color de fondo de la tarjeta
+              obscureCardNumber: false, // Puedes cambiar a true para ocultar el número
+              obscureCardCvv: false,     // Puedes cambiar a true para ocultar el CVV
+              isHolderNameVisible: true, // Muestra el nombre del titular
+              onCreditCardWidgetChange: (CreditCardBrand brand) {
+                // Callback para cuando cambia la marca de la tarjeta (opcional)
+              },
+            ),
+            const SizedBox(height: 40),
+            // Formulario de entrada de datos de la tarjeta
+            CreditCardForm(
+              formKey: formKey, // Asigna la clave global al formulario
+              cardNumber: cardNumber,
+              expiryDate: expiryDate,
+              cardHolderName: cardHolderName,
+              cvvCode: cvvCode,
+              onCreditCardModelChange: (CreditCardModel data) {
+                // Callback que se ejecuta cada vez que los datos del formulario cambian
+                setState(() {
+                  cardNumber = data.cardNumber;
+                  expiryDate = data.expiryDate;
+                  cardHolderName = data.cardHolderName;
+                  cvvCode = data.cvvCode;
+                  isCvvFocused = data.isCvvFocused;
+                });
+              },
+              themeColor: const Color(0xFF213354), // Color principal del tema del formulario
+              cardNumberDecoration: const InputDecoration(
+                labelText: 'Número de Tarjeta',
+                hintText: 'XXXX XXXX XXXX XXXX',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.credit_card),
+              ),
+              expiryDateDecoration: const InputDecoration(
+                labelText: 'Fecha de Expiración',
+                hintText: 'MM/YY',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.calendar_today),
+              ),
+              cvvCodeDecoration: const InputDecoration(
+                labelText: 'CVV',
+                hintText: 'XXX',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.lock),
+              ),
+              cardHolderDecoration: const InputDecoration(
+                labelText: 'Nombre del Titular',
+                hintText: 'NOMBRE APELLIDO',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.person),
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              flex: 2,
-              child: TextFormField(
-                decoration: const InputDecoration(border: OutlineInputBorder(), labelText: "Exp. Mes", hintText: "MM"),
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(2)],
-                validator: (value) {
-                   if (value == null || value.isEmpty) return "Requerido";
-                   final month = int.tryParse(value);
-                   if (month == null || month < 1 || month > 12) return "Inválido";
-                   return null;
-                },
-              ),
+            const SizedBox(height: 30),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Total", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
+                Text("\$${widget.scheduleData['cost']?.toStringAsFixed(2) ?? '0.00'}", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              ],
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              flex: 1,
-              child: TextFormField(
-                decoration: const InputDecoration(border: OutlineInputBorder(), labelText: "CVV", hintText: "***"),
-                keyboardType: TextInputType.number,
-                obscureText: true,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(4)],
-                validator: (value) => (value == null || value.length < 3) ? "Inválido" : null,
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _processPayment, // Llama a la función de simulación de pago
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF213354),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-            )
+              child: const Text("Realizar Pago", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            ),
           ],
-        )
-      ],
+        ),
+      ),
     );
   }
 }

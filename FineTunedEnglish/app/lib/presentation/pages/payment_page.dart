@@ -14,6 +14,7 @@ import '../models/usuarios.dart';
 import '../services/auth_service.dart';
 import '../services/inscription_service.dart';
 import '../widgets/shared_footer.dart';
+import 'schedule_page.dart';
 
 enum FormCompletion { schedule, representative }
 

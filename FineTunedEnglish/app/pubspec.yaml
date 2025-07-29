@@ -21,9 +21,12 @@ dependencies:
   path_provider: ^2.0.11
   permission_handler: ^11.0.1
   share_plus: ^7.2.1
-  pdf: ^3.10.4
-  printing: ^5.11.0
-pdf_render: ^1.4.12+1
+  pdf: ^3.10.8
+  printing: ^5.11.1
+  pdf_render: ^1.4.12
+  image: ^4.0.17
+  open_filex: ^4.4.0
+
 
 
 
@@ -44,5 +47,7 @@ flutter:
 
 
   assets:
+    - assets/certificates/
     - assets/splash/app_icon.png
     - assets/certificates/img.png
+    - assets/certificates/certificado.png
