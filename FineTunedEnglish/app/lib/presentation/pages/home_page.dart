@@ -74,10 +74,12 @@ class _HomePageState extends State<HomePage> {
         });
       }
     } catch(e) {
-      if(mounted) setState(() { 
+      if(mounted) {
+        setState(() { 
         _errorMessage = "Error al cargar datos: $e"; 
         _isLoading = false; 
       });
+      }
     }
   }
   
@@ -125,12 +127,14 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     if (_isLoading) return const Center(child: CircularProgressIndicator());
     if (_errorMessage != null) return Center(child: Text(_errorMessage!));
-    if (_allEnrolledCourses.isEmpty) return const Center(
+    if (_allEnrolledCourses.isEmpty) {
+      return const Center(
         child: Padding(
             padding: EdgeInsets.all(16.0),
             child: Text("No estás inscrito en ningún curso activo.", textAlign: TextAlign.center),
         ),
     );
+    }
 
     final newTasks = _currentTasks.where((taskWithSub) =>
         taskWithSub.submission.estado == TaskStatus.pending ||
