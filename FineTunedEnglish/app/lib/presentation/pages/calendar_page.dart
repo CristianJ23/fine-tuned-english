@@ -1,16 +1,17 @@
+// ===== CORRECCIÓN CLAVE AQUÍ: Imports correctos y sin errores de tipeo =====
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
-// Asegúrate de que todas estas rutas de import sean correctas para tu proyecto
+// Asegúrate de que todas estas rutas de import relativas sean correctas
 import '../models/calendar_event.dart';
-import '../models/enrolled_course.dart';
 import '../services/calendar_service.dart';
 import '../services/auth_service.dart';
-import '../services/inscription_service.dart';
 import '../services/reminder_service.dart';
+// Se reintroduce el servicio de asistencia para poder justificar
 import '../services/attendance_service.dart';
+
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
@@ -22,8 +23,8 @@ class CalendarPage extends StatefulWidget {
 class _CalendarScreenState extends State<CalendarPage> {
   // --- Estado y Servicios ---
   final CalendarService _calendarService = CalendarService();
-  final InscriptionService _inscriptionService = InscriptionService();
   final ReminderService _reminderService = ReminderService();
+  // Se añade de nuevo el servicio de asistencia
   final AttendanceService _attendanceService = AttendanceService();
   
   bool _isLoading = true;
@@ -32,7 +33,6 @@ class _CalendarScreenState extends State<CalendarPage> {
   late Map<DateTime, List<CalendarEvent>> _events;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-  List<EnrolledCourse> _enrolledCourses = [];
 
   // --- Ciclo de Vida e Inicialización ---
   @override
@@ -53,15 +53,11 @@ class _CalendarScreenState extends State<CalendarPage> {
     
     if(!_isLoading && mounted) setState(() => _isLoading = true);
     
-    final results = await Future.wait([
-        _calendarService.getEventsForStudent(studentId),
-        _inscriptionService.getEnrolledCoursesForStudent(studentId)
-    ]);
+    final eventsData = await _calendarService.getEventsForStudent(studentId);
     
     if(mounted) {
       setState(() {
-        _events = results[0] as Map<DateTime, List<CalendarEvent>>;
-        _enrolledCourses = results[1] as List<EnrolledCourse>;
+        _events = eventsData;
         _isLoading = false;
       });
     }
@@ -107,10 +103,10 @@ class _CalendarScreenState extends State<CalendarPage> {
             ),
           ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _showCreationOptions,
+        onPressed: () => _showAddReminderDialog(_selectedDay ?? DateTime.now()),
         backgroundColor: const Color(0xFF213354),
-        tooltip: 'Añadir Evento',
-        child: const Icon(Icons.add, color: Colors.white),
+        tooltip: 'Añadir Recordatorio Personal',
+        child: const Icon(Icons.alarm_add, color: Colors.white),
       ),
     );
   }
@@ -183,33 +179,6 @@ class _CalendarScreenState extends State<CalendarPage> {
     );
   }
   
-  void _showCreationOptions() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => Wrap(
-        children: <Widget>[
-          ListTile(
-            leading: const Icon(Icons.add_task, color: Colors.indigo),
-            title: const Text('Registrar Asistencia o Falta'),
-            onTap: () {
-              Navigator.pop(context);
-              _showAddAttendanceDialog(_selectedDay ?? DateTime.now());
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.alarm_add, color: Colors.green),
-            title: const Text('Añadir Recordatorio Personal'),
-            onTap: () {
-              Navigator.pop(context);
-              _showAddReminderDialog(_selectedDay ?? DateTime.now());
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _showAddReminderDialog(DateTime selectedDate) async {
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
@@ -246,96 +215,10 @@ class _CalendarScreenState extends State<CalendarPage> {
     );
   }
   
-  Future<void> _showAddAttendanceDialog(DateTime selectedDate) async {
-    if (_enrolledCourses.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Debes estar inscrito en un curso.")));
-      return;
-    }
-    final EnrolledCourse? selectedCourse = await _selectCourseForAttendance();
-    if (selectedCourse == null || !mounted) return;
-    final String? status = await _selectAttendanceStatus(selectedCourse);
-    if (status == null || !mounted) return;
-    String? reason;
-    if (status == 'falta') {
-      reason = await _showJustificationInputDialog();
-      if (reason == null) return;
-    }
-    await _createAttendanceRecord(selectedCourse, status, reason, selectedDate);
-  }
-  
-  Future<EnrolledCourse?> _selectCourseForAttendance() async {
-    return showDialog<EnrolledCourse>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Selecciona el curso"),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: _enrolledCourses.length,
-            itemBuilder: (context, index) {
-              final course = _enrolledCourses[index];
-              return ListTile(title: Text(course.subLevel.name), onTap: () => Navigator.of(context).pop(course));
-            },
-          ),
-        ),
-        actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text("Cancelar"))],
-      ),
-    );
-  }
-
-  Future<String?> _selectAttendanceStatus(EnrolledCourse course) async {
-    return showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Registrar para ${course.subLevel.name}", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        content: const Text("¿Cuál es tu estado para el día seleccionado?"),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text("Cancelar")),
-          ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.green), onPressed: () => Navigator.of(context).pop('asistencia'), child: const Text("Asistencia", style: TextStyle(color: Colors.white))),
-          ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: Colors.orange), onPressed: () => Navigator.of(context).pop('falta'), child: const Text("Falta", style: TextStyle(color: Colors.white))),
-        ],
-      ),
-    );
-  }
-  
-  Future<String?> _showJustificationInputDialog() async {
-    final reasonController = TextEditingController();
-    return showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Motivo de la Falta"),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        content: TextField(controller: reasonController, decoration: const InputDecoration(hintText: "Ej: Cita médica", border: OutlineInputBorder()), maxLines: 2, autofocus: true, textCapitalization: TextCapitalization.sentences),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(null), child: const Text("Cancelar")),
-          ElevatedButton(
-            onPressed: () {
-              if (reasonController.text.trim().isNotEmpty) Navigator.of(context).pop(reasonController.text.trim());
-            },
-            child: const Text("Confirmar")
-          ),
-        ],
-      ),
-    );
-  }
-  
-  Future<void> _createAttendanceRecord(EnrolledCourse course, String status, String? reason, DateTime date) async {
-    final error = await _attendanceService.createAttendance(studentId: AuthService.currentUser!.id, inscriptionId: course.inscription.id, date: date, status: status, reason: reason);
-    if (mounted) {
-      if (error == null) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Registro guardado exitosamente"), backgroundColor: Colors.green));
-        _loadData();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error), backgroundColor: Colors.red));
-      }
-    }
-  }
-
   Future<void> _showEventDetailsDialog(CalendarEvent event) async {
+    // Se determina si se puede justificar la falta
     final canJustify = event.type == CalendarEventType.falta && (event.description == null || event.description!.isEmpty);
+    
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -359,6 +242,7 @@ class _CalendarScreenState extends State<CalendarPage> {
             IconButton(icon: const Icon(Icons.delete_outline, color: Colors.redAccent), onPressed: () { Navigator.of(context).pop(); _deleteReminder(event); }, tooltip: 'Eliminar'),
             const Spacer(),
           ],
+          // Se muestra el botón de justificar si se cumple la condición
           if (canJustify) TextButton(onPressed: () { Navigator.of(context).pop(); _showJustifyAbsenceDialog(event); }, child: const Text("Justificar Falta", style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold))),
           TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cerrar')),
         ],
@@ -366,6 +250,7 @@ class _CalendarScreenState extends State<CalendarPage> {
     );
   }
   
+  // Se restaura el método para mostrar el diálogo de justificación de faltas.
   Future<void> _showJustifyAbsenceDialog(CalendarEvent event) async {
     final reasonController = TextEditingController();
     await showDialog(
