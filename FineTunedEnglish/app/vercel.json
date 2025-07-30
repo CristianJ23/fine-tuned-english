@@ -1,6 +1,5 @@
 {
   "build": {
-    "command": "git clone https://github.com/flutter/flutter.git --depth 1 -b stable /usr/local/flutter && export PATH=\"$PATH:/usr/local/flutter/bin\" && flutter build web --release",
     "outputDirectory": "build/web"
   },
   "rewrites": [
