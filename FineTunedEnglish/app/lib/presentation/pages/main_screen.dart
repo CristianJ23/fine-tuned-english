@@ -13,17 +13,17 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _selectedIndex = 0;
+  int _selectedIndex = 1;
 
   static const List<String> _appBarTitles = <String>[
-    'Inicio',
     'Calendario',
+    'Inicio',
     'Perfil',
   ];
 
   static const List<Widget> _widgetOptions = <Widget>[
-    HomePage(),
     CalendarPage(),
+    HomePage(),
     ProfilePage(),
   ];
 
@@ -41,20 +41,23 @@ class _MainScreenState extends State<MainScreen> {
       body: _widgetOptions.elementAt(_selectedIndex),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: const Color(0xFF213354),
+
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.menu_book_rounded),
-            label: 'Inicio',
-          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.calendar_today_rounded),
             label: 'Horario',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            label: 'Inicio',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline_rounded),
             label: 'Perfil',
           ),
         ],
+        // ==============================================================
+
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.grey,
