@@ -2,5 +2,9 @@
   "title": "Generador de Certificados",
   "generar_certificado": "Generar Certificado",
   "matriculas": "Matrículas",
+  "Recomendaciones": "Recomendaciones",
+  "Sobre Nosotros": "Sobre Nosotros",
+  "Configuraciones": "Configuraciones",
+  "Cerrar Sesión": "Crrar sesion",
   "hello": "Hola, {{name}}"
 }

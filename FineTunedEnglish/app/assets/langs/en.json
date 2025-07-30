@@ -1,6 +1,10 @@
 {
   "title": "Generate Certificate",
   "generar_certificado": "generate certificate",
-  "matriculas": "Enrollments",
+  "matriculas": "Matrículas",
+  "Recomendaciones": "Recommendations",
+  "Sobre Nosotros": "About us",
+  "Configuraciones": "Settings",
+  "Cerrar Sesión": "logout",
   "hello": "Hello, {{name}}"
 }

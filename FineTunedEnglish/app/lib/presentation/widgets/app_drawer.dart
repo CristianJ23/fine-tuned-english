@@ -58,7 +58,7 @@ class AppDrawer extends StatelessWidget {
                 _buildDrawerHeader(context),
                 _buildDrawerItem(
                   icon: Icons.chat_bubble_outline_rounded,
-                  text: 'Recomendaciones',
+                  text: 'Recomendaciones'.tr(),
                   buttonColor: buttonColor,
                   onTap: () {
                     Navigator.pop(context);
@@ -66,7 +66,7 @@ class AppDrawer extends StatelessWidget {
                 ),
                 _buildDrawerItem(
                   icon: Icons.info_outline_rounded,
-                  text: 'Sobre Nosotros',
+                  text: 'Sobre Nosotros'.tr(),
                   buttonColor: buttonColor,
                   onTap: () {
                     Navigator.pop(context);
@@ -74,7 +74,7 @@ class AppDrawer extends StatelessWidget {
                 ),
                 _buildDrawerItem(
                   icon: Icons.settings_outlined,
-                  text: 'Configuraciones',
+                  text: 'Configuraciones'.tr(),
                   buttonColor: buttonColor,
                   onTap: () {
                     Navigator.pop(context);
@@ -95,13 +95,15 @@ class AppDrawer extends StatelessWidget {
                 ),
                 _buildDrawerItem(
                   icon: Icons.school_outlined,
-                  text: 'generar_certificado'.tr(), // 👈 Aquí usas la clave del JSON
+                  text: 'generar_certificado'.tr(),
+                  // 👈 Aquí usas la clave del JSON
                   buttonColor: buttonColor,
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const CertificatePage()),
+                      MaterialPageRoute(
+                          builder: (context) => const CertificatePage()),
                     );
                   },
                 ),
@@ -180,9 +182,17 @@ class AppDrawer extends StatelessWidget {
 
   Widget _buildLogoutButton(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-      child: ElevatedButton.icon(
-        onPressed: () async {
+      padding: const EdgeInsets.symmetric(horizontal: 20.0)
+      ,
+      child
+          :
+      ElevatedButton
+          .
+      icon
+        (
+        onPressed
+            :
+            () async {
           await AuthService().signOut();
           if (context.mounted) {
             Navigator.pushAndRemoveUntil(
@@ -193,8 +203,8 @@ class AppDrawer extends StatelessWidget {
           }
         },
         icon: const Icon(Icons.exit_to_app_rounded, color: Colors.white),
-        label: const Text(
-          'Cerrar Sesión',
+        label: Text( // <--- Removed 'const'
+          'Cerrar Sesión'.tr(),
           style: TextStyle(
               color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
         ),
