@@ -1,0 +1,6 @@
+{
+  "title": "Generador de Certificados",
+  "generar_certificado": "Generar Certificado",
+  "matriculas": "Matrículas",
+  "hello": "Hola, {{name}}"
+}

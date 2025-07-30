@@ -20,6 +20,7 @@ import '../models/english_level.dart'; // Import EnglishLevel model
 import '../services/auth_service.dart';
 import '../services/level_service.dart'; // Import LevelService
 import '../widgets/shared_footer.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 // ====== Isolate: función pura que construye el PDF ======
 class _PdfParams {
@@ -55,7 +56,7 @@ Future<Uint8List> _buildPdfIsolate(_PdfParams params) async {
                 angle: -math.pi / 2,
                 child: pw.Text(
                   params.studentName,
-                  style: const pw.TextStyle(
+                  style: pw.TextStyle(
                     fontSize: 24,
                     fontWeight: pw.FontWeight.bold,
                     color: PdfColors.black,
@@ -259,11 +260,14 @@ class _CertificatePageState extends State<CertificatePage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: const Color(0xFF213354),
-        title: const Text('Generador de Certificados',
-            style: TextStyle(
-                color: Colors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.bold)),
+        title: const Text(
+          'title', // <-- clave, no texto literal
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+          ),
+        ).tr(),
         iconTheme: const IconThemeData(color: Colors.white),
         automaticallyImplyLeading: false,
         leading: const SizedBox.shrink(),
