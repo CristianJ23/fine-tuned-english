@@ -1,10 +1,185 @@
 {
-  "title": "Generate Certificate",
-  "generar_certificado": "generate certificate",
-  "matriculas": "Matrículas",
-  "Recomendaciones": "Recommendations",
-  "Sobre Nosotros": "About us",
-  "Configuraciones": "Settings",
-  "Cerrar Sesión": "logout",
-  "hello": "Hello, {{name}}"
+  "drawer": {
+    "generateCertificate": "Generate Certificate",
+    "enrollments": "Enrollments",
+    "recommendations": "Recommendations",
+    "aboutUs": "About Us",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "common": {
+    "hello": "Hello, {name}",
+    "level": "Level",
+    "program": "Program",
+    "title": "Title",
+    "descriptionOptional": "Description (Optional)",
+    "cancel": "Cancel",
+    "save": "Save",
+    "close": "Close",
+    "send": "Send",
+    "update": "Update",
+    "delete": "Delete",
+    "ok": "OK",
+    "total": "{count} Total",
+    "change": "Change",
+    "file": "File",
+    "names": "Names",
+    "lastNames": "Last Names",
+    "email": "Email",
+    "idNumber": "ID Number",
+    "phoneNumber": "Phone Number",
+    "birthDate": "Birth Date"
+  },
+  "errors": {
+    "notAuthenticated": "User not authenticated.",
+    "loadDataError": "Error loading data: {error}"
+  },
+  "validators": {
+    "requiredField": "This field is required",
+    "invalidEmail": "Invalid email",
+    "selectADate": "Please select a date"
+  },
+  "taskStatus": {
+    "pending": "Pending",
+    "notDelivered": "Not Delivered",
+    "done": "Submitted",
+    "graded": "Graded"
+  },
+  "pages": {
+    "main": {
+      "home": "Home",
+      "calendar": "Calendar",
+      "schedule": "Schedule",
+      "profile": "Profile"
+    },
+    "home": {
+      "noActiveCourses": "You are not enrolled in any active course.",
+      "allTasks": "All Tasks",
+      "newTasks": "New Tasks",
+      "recentTasks": "Recent Tasks",
+      "noTasksInSection": "There are no tasks in this section."
+    },
+    "allTasks": {
+      "title": "All Tasks",
+      "noTasksForSelection": "No tasks for the current selection."
+    },
+    "calendar": {
+      "addPersonalReminder": "Add Personal Reminder",
+      "eventsOf": "Events for {date}",
+      "addReminderFor": "Add reminder for\n{date}",
+      "justifyAbsence": "Justify Absence",
+      "justifyAbsenceTitle": "Justify Absence",
+      "reasonForAbsence": "Reason for absence",
+      "editReminder": "Edit Reminder",
+      "confirmDeletion": "Confirm Deletion",
+      "confirmDeleteReminderMessage": "Are you sure you want to delete this reminder?",
+      "absenceJustified": "Absence justified.",
+      "reminderDeleted": "Reminder deleted.",
+      "legend": "Legend",
+      "legendDueDate": "Due Date",
+      "legendAbsences": "Absences",
+      "legendAttendance": "Attendance",
+      "legendPersonalReminder": "Personal Reminder",
+      "emptyStateTitle": "All good!",
+      "emptyStateMessage": "No events scheduled for this day.",
+      "justified": "Justified",
+      "unjustified": "Unjustified"
+    },
+    "announcements": {
+      "title": "Announcements",
+      "tabAll": "All",
+      "tabUnread": "Unread",
+      "openingAnnouncement": "Opening {type}"
+    },
+    "profile": {
+      "personalData": "Personal Data",
+      "academicHistory": "Academic History",
+      "modify": "Modify"
+    },
+    "schedule": {
+      "title": "Schedules",
+      "selectLevel": "Select a Level",
+      "noCoursesForLevel": "No courses available for the selected level.",
+      "availableSpots": "{count} Available Spots",
+      "enroll": "Enroll"
+    },
+    "payment": {
+      "title": "Payment",
+      "representativeData": "Representative's Data",
+      "dataSavedSuccessfully": "Information saved successfully",
+      "completePrerequisites": "Please complete the representative's data and select a schedule first.",
+      "transferCodeConfirmed": "Transfer code confirmed successfully.",
+      "selectCourseTitle": "Select a Course!",
+      "selectScheduleForInscription": "You must select a schedule for enrollment.",
+      "chooseSchedule": "Choose a Schedule",
+      "scheduleSelected": "Schedule Selected",
+      "totalCost": "Total Cost",
+      "deferred5Months": "Deferred 5 months - $50.00/month",
+      "paymentMethod": "Payment Method",
+      "creditDebitCard": "Credit/Debit Card",
+      "bankTransfer": "Bank Transfer",
+      "chooseScheduleToSeeMethods": "Choose a schedule to see payment methods.",
+      "makePaymentWithAmount": "Make Payment - ${amount}"
+    },
+    "representative": {
+      "title": "Representative's Data",
+      "isOwnRepresentative": "Is the student their own representative?",
+      "ifSoCheckHere": "If so, check here:",
+      "pleaseFillData": "Please, fill in the following data:",
+      "saveInformation": "Save Information"
+    },
+    "creditCard": {
+      "paymentInfoTitle": "Payment Information",
+      "simulatedPayment": "Simulated Payment",
+      "paymentSuccessful": "The payment has been processed successfully!",
+      "cardNumber": "Card Number",
+      "expiryDate": "Expiry Date",
+      "cardHolderName": "Cardholder Name",
+      "cvv": "CVV",
+      "totalPaid": "Total Paid:",
+      "makePayment": "Make Payment",
+      "cardInfoSaved": "Card information saved."
+    },
+    "transfer": {
+      "title": "Transfer Code",
+      "pleaseEnterCode": "Please enter the transfer code.",
+      "bankInfo": "Bank Information",
+      "bank": "Bank:",
+      "account": "Account:",
+      "beneficiary": "Beneficiary:",
+      "ruc": "ID/RUC:",
+      "instructions": "Instructions",
+      "instructionsText": "1. Make the transfer to the indicated account\n2. Enter the confirmation code from your receipt\n3. Press \"Confirm Code\" to complete the process",
+      "transferCode": "Transfer Code",
+      "enterVoucherCode": "Enter the code from your voucher",
+      "confirmCode": "Confirm Code"
+    },
+    "confirmation": {
+      "paymentReady": "Payment Completed",
+      "loremIpsum": "Your payment has been successfully processed and your enrollment is complete. Welcome!",
+      "finish": "Finish"
+    },
+    "taskDetail": {
+      "submissionSuccess": "Task submitted successfully!",
+      "fileUploaded": "File uploaded!",
+      "selectFileFirst": "Please, select a file first.",
+      "attachFile": "Attach File",
+      "noFileSelected": "No file selected",
+      "uploadFile": "Upload File",
+      "pendingMessage": "Task in progress. Finish attaching the files to submit.",
+      "attachFileSimulated": "Attach File (Simulated)",
+      "submitHomework": "Submit Homework",
+      "cancelSubmission": "Cancel Submission",
+      "deliveryDate": "Delivery date",
+      "ofPoints": "Out of {points} pts",
+      "addReminderNotifications": "Add reminder notifications",
+      "qualification": "Qualification",
+      "periods": "Points",
+      "low": "Low: 0",
+      "average": "Average: 7.5",
+      "high": "High: 10",
+      "comments": "Comments",
+      "noCommentsYet": "No comments yet."
+    }
+  }
 }

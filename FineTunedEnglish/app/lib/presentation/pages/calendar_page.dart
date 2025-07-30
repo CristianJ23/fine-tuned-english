@@ -1,17 +1,14 @@
-// ===== CORRECCIÓN CLAVE AQUÍ: Imports correctos y sin errores de tipeo =====
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:easy_localization/easy_localization.dart';
 
-// Asegúrate de que todas estas rutas de import relativas sean correctas
 import '../models/calendar_event.dart';
 import '../services/calendar_service.dart';
 import '../services/auth_service.dart';
 import '../services/reminder_service.dart';
-// Se reintroduce el servicio de asistencia para poder justificar
 import '../services/attendance_service.dart';
-
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
@@ -21,10 +18,8 @@ class CalendarPage extends StatefulWidget {
 }
 
 class _CalendarScreenState extends State<CalendarPage> {
-  // --- Estado y Servicios ---
   final CalendarService _calendarService = CalendarService();
   final ReminderService _reminderService = ReminderService();
-  // Se añade de nuevo el servicio de asistencia
   final AttendanceService _attendanceService = AttendanceService();
   
   bool _isLoading = true;
@@ -34,20 +29,24 @@ class _CalendarScreenState extends State<CalendarPage> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
-  // --- Ciclo de Vida e Inicialización ---
   @override
   void initState() {
     super.initState();
-    _selectedDay = _focusedDay;
+    // Inicializamos el día seleccionado como UTC para consistencia
+    _selectedDay = DateTime.utc(_focusedDay.year, _focusedDay.month, _focusedDay.day);
     _events = {};
-    initializeDateFormatting('es_ES', null).then((_) => _loadData());
+    initializeDateFormatting('es_ES', null);
+    initializeDateFormatting('en_US', null);
+    _loadData();
   }
 
-  // --- Lógica de Datos ---
   Future<void> _loadData() async {
     final studentId = AuthService.currentUser?.id;
     if (studentId == null) {
-      if (mounted) setState(() { _errorMessage = "Usuario no autenticado."; _isLoading = false; });
+      if (mounted) setState(() { 
+        _errorMessage = "errors.notAuthenticated".tr(); 
+        _isLoading = false; 
+      });
       return;
     }
     
@@ -64,21 +63,28 @@ class _CalendarScreenState extends State<CalendarPage> {
   }
   
   List<CalendarEvent> _getEventsForDay(DateTime day) {
+    // La clave de búsqueda siempre debe ser UTC
     return _events[DateTime.utc(day.year, day.month, day.day)] ?? [];
   }
 
+  // ===== SOLUCIÓN BUG DÍA ANTERIOR (Punto Clave 1) =====
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
-    if (!isSameDay(_selectedDay, selectedDay)) {
+    // Normalizamos el día seleccionado a UTC inmediatamente al hacer clic.
+    // Esto asegura que toda la lógica de la página use la fecha correcta.
+    final selectedDayUtc = DateTime.utc(selectedDay.year, selectedDay.month, selectedDay.day);
+    
+    if (!isSameDay(_selectedDay, selectedDayUtc)) {
       setState(() {
-        _selectedDay = selectedDay;
-        _focusedDay = focusedDay;
+        _selectedDay = selectedDayUtc;
+        _focusedDay = focusedDay; // focusedDay puede permanecer local, es solo para la vista.
       });
     }
   }
 
-  // --- Build Principal ---
   @override
   Widget build(BuildContext context) {
+    final currentLocale = context.locale.toStringWithSeparator(separator: '_');
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       body: _isLoading 
@@ -89,12 +95,12 @@ class _CalendarScreenState extends State<CalendarPage> {
             onRefresh: _loadData,
             child: CustomScrollView(
               slivers: [
-                _buildSliverCalendar(),
-                _CalendarHeader(selectedDay: _selectedDay!),
+                _buildSliverCalendar(currentLocale),
+                _CalendarHeader(selectedDay: _selectedDay!, locale: currentLocale),
                 _buildSliverEventList(),
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                     child: _buildLegendCard(),
                   ),
                 ),
@@ -105,61 +111,83 @@ class _CalendarScreenState extends State<CalendarPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddReminderDialog(_selectedDay ?? DateTime.now()),
         backgroundColor: const Color(0xFF213354),
-        tooltip: 'Añadir Recordatorio Personal',
+        tooltip: 'pages.calendar.addPersonalReminder'.tr(),
         child: const Icon(Icons.alarm_add, color: Colors.white),
       ),
     );
   }
 
-  // --- Widgets de la UI ---
-
-  Widget _buildSliverCalendar() {
+  Widget _buildSliverCalendar(String locale) {
     return SliverAppBar(
       backgroundColor: const Color(0xFFF8F9FA),
       pinned: true,
-      expandedHeight: 400.0,
+      // ===== SOLUCIÓN OVERFLOW: Aumentar altura para meses con 6 semanas =====
+      expandedHeight: 420.0, 
       flexibleSpace: FlexibleSpaceBar(
         background: Card(
-          margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-          elevation: 6.0,
+          margin: const EdgeInsets.all(8.0),
+          elevation: 4.0,
           shadowColor: Colors.black.withOpacity(0.1),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
-          child: TableCalendar<CalendarEvent>(
-            locale: 'es_ES',
-            firstDay: DateTime.utc(2024, 1, 1),
-            lastDay: DateTime.utc(2026, 12, 31),
-            focusedDay: _focusedDay,
-            selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-            onDaySelected: _onDaySelected,
-            eventLoader: _getEventsForDay,
-            headerStyle: const HeaderStyle(formatButtonVisible: false, titleCentered: true, titleTextStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            calendarStyle: CalendarStyle(
-              outsideDaysVisible: false,
-              selectedDecoration: BoxDecoration(color: const Color(0xFF213354), shape: BoxShape.circle),
-              todayDecoration: BoxDecoration(color: Colors.blue.shade100, shape: BoxShape.circle),
-            ),
-            calendarBuilders: CalendarBuilders(
-              defaultBuilder: (context, day, focusedDay) {
-                final events = _getEventsForDay(day);
-                if (events.isNotEmpty) {
-                  Color dayColor = Colors.transparent;
-                  if (events.any((e) => e.type == CalendarEventType.falta)) dayColor = Colors.redAccent.withOpacity(0.8);
-                  else if (events.any((e) => e.type == CalendarEventType.tarea)) dayColor = Colors.purple.withOpacity(0.8);
-                  else if (events.any((e) => e.type == CalendarEventType.asistencia)) dayColor = Colors.indigo.withOpacity(0.8);
-                  else if (events.any((e) => e.type == CalendarEventType.recordatorio)) dayColor = Colors.green.withOpacity(0.8);
-                  return Container(
-                    margin: const EdgeInsets.all(5.0),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(color: dayColor, shape: BoxShape.circle),
-                    child: Text('${day.day}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  );
-                }
-                return null;
-              },
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TableCalendar<CalendarEvent>(
+              locale: locale,
+              rowHeight: 46.0, // Controlar la altura de las filas para consistencia
+              firstDay: DateTime.utc(2024, 1, 1),
+              lastDay: DateTime.utc(2026, 12, 31),
+              focusedDay: _focusedDay,
+              selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+              onDaySelected: _onDaySelected,
+              eventLoader: _getEventsForDay,
+              headerStyle: HeaderStyle(
+                formatButtonVisible: false,
+                titleCentered: true,
+                titleTextStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF213354)),
+                leftChevronIcon: const Icon(Icons.chevron_left, color: Color(0xFF213354)),
+                rightChevronIcon: const Icon(Icons.chevron_right, color: Color(0xFF213354)),
+              ),
+              daysOfWeekStyle: DaysOfWeekStyle(
+                weekdayStyle: TextStyle(color: Colors.grey[600]),
+                weekendStyle: const TextStyle(color: Colors.pinkAccent),
+              ),
+              calendarStyle: CalendarStyle(
+                outsideDaysVisible: false,
+                selectedDecoration: const BoxDecoration(color: Color(0xFF213354), shape: BoxShape.circle),
+                selectedTextStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                todayDecoration: BoxDecoration(color: Colors.pink.withOpacity(0.2), shape: BoxShape.circle),
+                todayTextStyle: const TextStyle(color: Colors.pink),
+              ),
+              calendarBuilders: CalendarBuilders(
+                markerBuilder: (context, day, events) {
+                  if (events.isNotEmpty) {
+                    return Positioned(
+                      bottom: 5,
+                      child: _buildEventsMarker(day, events),
+                    );
+                  }
+                  return null;
+                },
+              ),
             ),
           ),
         ),
       ),
+    );
+  }
+  
+  Widget _buildEventsMarker(DateTime day, List<CalendarEvent> events) {
+    final eventColors = events.map((event) => event.color).toSet();
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: eventColors.map((color) {
+        return Container(
+          width: 6,
+          height: 6,
+          margin: const EdgeInsets.symmetric(horizontal: 1.5),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        );
+      }).toList(),
     );
   }
 
@@ -182,43 +210,51 @@ class _CalendarScreenState extends State<CalendarPage> {
   Future<void> _showAddReminderDialog(DateTime selectedDate) async {
     final titleController = TextEditingController();
     final descriptionController = TextEditingController();
+    final currentLocale = context.locale.toStringWithSeparator(separator: '_');
+    
+    // ===== SOLUCIÓN BUG DÍA ANTERIOR (Punto Clave 2) =====
+    // Aseguramos que la fecha que usamos sea UTC, sin importar si vino de _selectedDay (ya UTC)
+    // o de DateTime.now() (local).
+    final dateForDialog = DateTime.utc(selectedDate.year, selectedDate.month, selectedDate.day);
+
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Añadir recordatorio para\n${DateFormat('dd/MM/yyyy', 'es_ES').format(selectedDate)}"),
+        title: Text("pages.calendar.addReminderFor".tr(namedArgs: {'date': DateFormat('dd/MM/yyyy', currentLocale).format(dateForDialog)})),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
-          TextField(controller: titleController, decoration: const InputDecoration(labelText: "Título", border: OutlineInputBorder()), textCapitalization: TextCapitalization.sentences),
+          TextField(controller: titleController, decoration: InputDecoration(labelText: 'common.title'.tr(), border: const OutlineInputBorder()), textCapitalization: TextCapitalization.sentences),
           const SizedBox(height: 16),
-          TextField(controller: descriptionController, decoration: const InputDecoration(labelText: "Descripción (Opcional)", border: OutlineInputBorder()), textCapitalization: TextCapitalization.sentences, maxLines: 3),
+          TextField(controller: descriptionController, decoration: InputDecoration(labelText: 'common.descriptionOptional'.tr(), border: const OutlineInputBorder()), textCapitalization: TextCapitalization.sentences, maxLines: 3),
         ]),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text("Cancelar")),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: Text('common.cancel'.tr())),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF213354), foregroundColor: Colors.white),
             onPressed: () async {
               if (titleController.text.trim().isNotEmpty) {
                 Navigator.of(context).pop();
+
                 await _reminderService.createReminder(
                   titulo: titleController.text.trim(),
                   descripcion: descriptionController.text.trim().isNotEmpty ? descriptionController.text.trim() : null,
-                  fecha: selectedDate,
+                  fecha: dateForDialog, // Usamos la fecha UTC asegurada
                   estudianteId: AuthService.currentUser!.id,
                 );
                 await _loadData();
               }
             },
-            child: const Text("Guardar"),
+            child: Text("common.save".tr()),
           ),
         ],
       ),
     );
   }
   
+  // (El resto de los métodos no necesitan cambios y se dejan igual)
   Future<void> _showEventDetailsDialog(CalendarEvent event) async {
-    // Se determina si se puede justificar la falta
     final canJustify = event.type == CalendarEventType.falta && (event.description == null || event.description!.isEmpty);
-    
+    final currentLocale = context.locale.toStringWithSeparator(separator: '_');
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -232,35 +268,33 @@ class _CalendarScreenState extends State<CalendarPage> {
         content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
           const SizedBox(height: 16),
           Text(event.title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          if (event.description != null && event.description!.isNotEmpty) ...[const SizedBox(height: 8), Text((event.type == CalendarEventType.falta ? "Motivo: " : "") + event.description!, style: const TextStyle(color: Colors.black54))],
+          if (event.description != null && event.description!.isNotEmpty) ...[const SizedBox(height: 8), Text((event.type == CalendarEventType.falta ? "${'pages.calendar.reasonForAbsence'.tr()}: " : "") + event.description!, style: const TextStyle(color: Colors.black54))],
           const Divider(height: 24),
-          _buildDetailRow(Icons.calendar_today_outlined, DateFormat('EEEE, dd MMMM yyyy', 'es_ES').format(event.date)),
+          _buildDetailRow(Icons.calendar_today_outlined, DateFormat('EEEE, dd MMMM yyyy', currentLocale).format(event.date)),
         ]),
         actions: [
           if (event.type == CalendarEventType.recordatorio) ...[
-            IconButton(icon: const Icon(Icons.edit_outlined, color: Colors.blueAccent), onPressed: () { Navigator.of(context).pop(); _showEditReminderDialog(event); }, tooltip: 'Editar'),
-            IconButton(icon: const Icon(Icons.delete_outline, color: Colors.redAccent), onPressed: () { Navigator.of(context).pop(); _deleteReminder(event); }, tooltip: 'Eliminar'),
+            IconButton(icon: const Icon(Icons.edit_outlined, color: Colors.blueAccent), onPressed: () { Navigator.of(context).pop(); _showEditReminderDialog(event); }, tooltip: 'common.update'.tr()),
+            IconButton(icon: const Icon(Icons.delete_outline, color: Colors.redAccent), onPressed: () { Navigator.of(context).pop(); _deleteReminder(event); }, tooltip: 'common.delete'.tr()),
             const Spacer(),
           ],
-          // Se muestra el botón de justificar si se cumple la condición
-          if (canJustify) TextButton(onPressed: () { Navigator.of(context).pop(); _showJustifyAbsenceDialog(event); }, child: const Text("Justificar Falta", style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold))),
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cerrar')),
+          if (canJustify) TextButton(onPressed: () { Navigator.of(context).pop(); _showJustifyAbsenceDialog(event); }, child: Text("pages.calendar.justifyAbsence".tr(), style: const TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold))),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: Text('common.close'.tr())),
         ],
       ),
     );
   }
   
-  // Se restaura el método para mostrar el diálogo de justificación de faltas.
   Future<void> _showJustifyAbsenceDialog(CalendarEvent event) async {
     final reasonController = TextEditingController();
     await showDialog(
         context: context,
         builder: (context) => AlertDialog(
-            title: const Text("Justificar Falta"),
+            title: Text("pages.calendar.justifyAbsenceTitle".tr()),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            content: TextField(controller: reasonController, decoration: const InputDecoration(labelText: "Motivo de la inasistencia", border: OutlineInputBorder()), maxLines: 3, textCapitalization: TextCapitalization.sentences),
+            content: TextField(controller: reasonController, decoration: InputDecoration(labelText: 'pages.calendar.reasonForAbsence'.tr(), border: const OutlineInputBorder()), maxLines: 3, textCapitalization: TextCapitalization.sentences),
             actions: [
-              TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text("Cancelar")),
+              TextButton(onPressed: () => Navigator.of(context).pop(), child: Text("common.cancel".tr())),
               ElevatedButton(
                 onPressed: () async {
                   if (reasonController.text.trim().isNotEmpty) {
@@ -268,7 +302,7 @@ class _CalendarScreenState extends State<CalendarPage> {
                     final error = await _attendanceService.justifyAbsence(attendanceId: event.documentId!, reason: reasonController.text.trim());
                     if (mounted) {
                       if (error == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Falta justificada."), backgroundColor: Colors.green));
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('pages.calendar.absenceJustified'.tr()), backgroundColor: Colors.green));
                         _loadData();
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error), backgroundColor: Colors.red));
@@ -276,7 +310,7 @@ class _CalendarScreenState extends State<CalendarPage> {
                     }
                   }
                 },
-                child: const Text("Enviar"),
+                child: Text("common.send".tr()),
               ),
             ]));
   }
@@ -287,15 +321,15 @@ class _CalendarScreenState extends State<CalendarPage> {
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Editar Recordatorio"),
+        title: Text("pages.calendar.editReminder".tr()),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
-          TextField(controller: titleController, decoration: const InputDecoration(labelText: "Título", border: OutlineInputBorder()), textCapitalization: TextCapitalization.sentences),
+          TextField(controller: titleController, decoration: InputDecoration(labelText: 'common.title'.tr(), border: const OutlineInputBorder()), textCapitalization: TextCapitalization.sentences),
           const SizedBox(height: 16),
-          TextField(controller: descriptionController, decoration: const InputDecoration(labelText: "Descripción (Opcional)", border: OutlineInputBorder()), textCapitalization: TextCapitalization.sentences, maxLines: 3),
+          TextField(controller: descriptionController, decoration: InputDecoration(labelText: 'common.descriptionOptional'.tr(), border: const OutlineInputBorder()), textCapitalization: TextCapitalization.sentences, maxLines: 3),
         ]),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text("Cancelar")),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: Text("common.cancel".tr())),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF213354), foregroundColor: Colors.white),
             onPressed: () async {
@@ -306,7 +340,7 @@ class _CalendarScreenState extends State<CalendarPage> {
                 _loadData();
               }
             },
-            child: const Text("Actualizar"),
+            child: Text("common.update".tr()),
           ),
         ],
       ),
@@ -317,22 +351,22 @@ class _CalendarScreenState extends State<CalendarPage> {
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Confirmar Eliminación"),
+        title: Text("pages.calendar.confirmDeletion".tr()),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        content: const Text("¿Estás seguro de que deseas eliminar este recordatorio?"),
+        content: Text("pages.calendar.confirmDeleteReminderMessage".tr()),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text("Cancelar")),
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text("common.cancel".tr())),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.of(context).pop(true), 
-            child: const Text("Eliminar", style: TextStyle(color: Colors.white))),
+            child: Text("common.delete".tr(), style: const TextStyle(color: Colors.white))),
         ],
       )
     );
     if (confirmed == true) {
       await _reminderService.deleteReminder(eventToDelete.documentId!);
       _loadData();
-      if(mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Recordatorio eliminado.")));
+      if(mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('pages.calendar.reminderDeleted'.tr())));
     }
   }
 
@@ -351,12 +385,12 @@ class _CalendarScreenState extends State<CalendarPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("Leyenda", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
+            Text("pages.calendar.legend".tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
             const Divider(height: 20, thickness: 1),
-            _buildLegendItem(Colors.purple, "Fecha de Entrega"),
-            _buildLegendItem(Colors.redAccent, "Faltas"),
-            _buildLegendItem(Colors.indigo, "Asistencia"),
-            _buildLegendItem(Colors.green, "Recordatorio Personal"),
+            _buildLegendItem(Colors.purple, "pages.calendar.legendDueDate".tr()),
+            _buildLegendItem(Colors.redAccent, "pages.calendar.legendAbsences".tr()),
+            _buildLegendItem(Colors.indigo, "pages.calendar.legendAttendance".tr()),
+            _buildLegendItem(Colors.green, "pages.calendar.legendPersonalReminder".tr()),
           ],
         ),
       ),
@@ -371,11 +405,10 @@ class _CalendarScreenState extends State<CalendarPage> {
   }
 }
 
-// --- WIDGETS Y CLASES EXTERNAS ---
-
 class _CalendarHeader extends StatelessWidget {
-  const _CalendarHeader({required this.selectedDay});
+  const _CalendarHeader({required this.selectedDay, required this.locale});
   final DateTime selectedDay;
+  final String locale;
   @override
   Widget build(BuildContext context) {
     return SliverPersistentHeader(
@@ -387,7 +420,7 @@ class _CalendarHeader extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           alignment: Alignment.centerLeft,
           child: Text(
-            'Eventos del ${DateFormat('dd MMMM yyyy', 'es_ES').format(selectedDay)}',
+            'pages.calendar.eventsOf'.tr(namedArgs: {'date': DateFormat('dd MMMM yyyy', locale).format(selectedDay)}),
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Color(0xFF495057)),
           ),
         ),
@@ -423,7 +456,10 @@ class _EventCard extends StatelessWidget {
               Text(event.title, style: const TextStyle(color: Colors.black54), maxLines: 2, overflow: TextOverflow.ellipsis),
               if (isAbsence) Padding(
                 padding: const EdgeInsets.only(top: 4.0),
-                child: Text(isJustified ? "Justificada" : "Sin Justificar", style: TextStyle(fontSize: 12, color: isJustified ? Colors.green : Colors.orange.shade700, fontWeight: FontWeight.bold))
+                child: Text(
+                  isJustified ? 'pages.calendar.justified'.tr() : 'pages.calendar.unjustified'.tr(), 
+                  style: TextStyle(fontSize: 12, color: isJustified ? Colors.green : Colors.orange.shade700, fontWeight: FontWeight.bold)
+                )
               )
             ])),
           ]),
@@ -445,9 +481,9 @@ class _EmptyStateCard extends StatelessWidget {
         children: [
           Icon(Icons.check_circle_outline, color: Colors.green.shade300, size: 48),
           const SizedBox(height: 12),
-          const Text("¡Todo en orden!", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text("pages.calendar.emptyStateTitle".tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
-          Text("No hay eventos programados para este día.", style: TextStyle(color: Colors.grey.shade600)),
+          Text("pages.calendar.emptyStateMessage".tr(), style: TextStyle(color: Colors.grey.shade600)),
         ],
       ),
     );

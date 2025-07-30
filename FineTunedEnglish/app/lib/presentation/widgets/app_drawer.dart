@@ -58,7 +58,8 @@ class AppDrawer extends StatelessWidget {
                 _buildDrawerHeader(context),
                 _buildDrawerItem(
                   icon: Icons.chat_bubble_outline_rounded,
-                  text: 'Recomendaciones'.tr(),
+                  // ===== CORRECCIÓN AQUÍ =====
+                  text: 'drawer.recommendations'.tr(),
                   buttonColor: buttonColor,
                   onTap: () {
                     Navigator.pop(context);
@@ -66,7 +67,8 @@ class AppDrawer extends StatelessWidget {
                 ),
                 _buildDrawerItem(
                   icon: Icons.info_outline_rounded,
-                  text: 'Sobre Nosotros'.tr(),
+                  // ===== CORRECCIÓN AQUÍ =====
+                  text: 'drawer.aboutUs'.tr(),
                   buttonColor: buttonColor,
                   onTap: () {
                     Navigator.pop(context);
@@ -74,7 +76,8 @@ class AppDrawer extends StatelessWidget {
                 ),
                 _buildDrawerItem(
                   icon: Icons.settings_outlined,
-                  text: 'Configuraciones'.tr(),
+                  // ===== CORRECCIÓN AQUÍ =====
+                  text: 'drawer.settings'.tr(),
                   buttonColor: buttonColor,
                   onTap: () {
                     Navigator.pop(context);
@@ -82,7 +85,8 @@ class AppDrawer extends StatelessWidget {
                 ),
                 _buildDrawerItem(
                   icon: Icons.account_balance_outlined,
-                  text: 'matriculas'.tr(),
+                  // ===== CORRECCIÓN AQUÍ =====
+                  text: 'drawer.enrollments'.tr(),
                   buttonColor: buttonColor,
                   onTap: () {
                     Navigator.pop(context);
@@ -95,8 +99,8 @@ class AppDrawer extends StatelessWidget {
                 ),
                 _buildDrawerItem(
                   icon: Icons.school_outlined,
-                  text: 'generar_certificado'.tr(),
-                  // 👈 Aquí usas la clave del JSON
+                  // ===== CORRECCIÓN AQUÍ =====
+                  text: 'drawer.generateCertificate'.tr(),
                   buttonColor: buttonColor,
                   onTap: () {
                     Navigator.pop(context);
@@ -119,8 +123,9 @@ class AppDrawer extends StatelessWidget {
 
   Widget _buildDrawerHeader(BuildContext context) {
     final Usuarios? currentUser = AuthService.currentUser;
+    // ===== CORRECCIÓN AQUÍ (Para el saludo "Hola, X") =====
     final String displayName = currentUser != null
-        ? '${currentUser.nombres} ${currentUser.apellidos}'
+        ? 'common.hello'.tr(namedArgs: {'name': currentUser.nombres})
         : 'Invitado';
     final String displayEmail = currentUser?.email ?? 'No autenticado';
 
@@ -182,17 +187,9 @@ class AppDrawer extends StatelessWidget {
 
   Widget _buildLogoutButton(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0)
-      ,
-      child
-          :
-      ElevatedButton
-          .
-      icon
-        (
-        onPressed
-            :
-            () async {
+      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+      child: ElevatedButton.icon(
+        onPressed: () async {
           await AuthService().signOut();
           if (context.mounted) {
             Navigator.pushAndRemoveUntil(
@@ -203,9 +200,10 @@ class AppDrawer extends StatelessWidget {
           }
         },
         icon: const Icon(Icons.exit_to_app_rounded, color: Colors.white),
-        label: Text( // <--- Removed 'const'
-          'Cerrar Sesión'.tr(),
-          style: TextStyle(
+        // ===== CORRECCIÓN AQUÍ =====
+        label: Text(
+          'drawer.logout'.tr(),
+          style: const TextStyle(
               color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
         ),
         style: ElevatedButton.styleFrom(

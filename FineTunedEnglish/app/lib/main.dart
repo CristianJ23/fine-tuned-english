@@ -1,8 +1,8 @@
 import 'package:app/presentation/pages/login_page.dart';
+import 'package:app/presentation/pages/main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 void main() async {
@@ -15,7 +15,7 @@ void main() async {
   runApp(
     EasyLocalization(
       supportedLocales: const [Locale('es'), Locale('en')],
-      path: 'assets/langs', // Ruta de los JSON
+      path: 'assets/langs',
       fallbackLocale: const Locale('es'),
       child: const MyApp(),
     ),
@@ -37,8 +37,9 @@ class MyApp extends StatelessWidget {
 
       supportedLocales: context.supportedLocales,
       localizationsDelegates: context.localizationDelegates,
-      locale: context.locale,
+      locale: context.locale, // <-- Esta línea es la que cambiará
 
+      // La página de login no necesita la Key porque desde ahí se navega a MainScreen
       home: const LoginPage(),
     );
   }

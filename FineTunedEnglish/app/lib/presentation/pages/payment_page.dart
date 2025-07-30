@@ -1,20 +1,14 @@
-// lib/presentation/pages/payment_page.dart (CÓDIGO COMPLETO Y SIN OMISIONES)
-
 import 'package:flutter/material.dart';
-
-// --- IMPORTACIONES NECESARIAS ---
-// Asegúrate de que las rutas a estos archivos sean correctas en tu proyecto.
-import 'credit_card_form_page.dart'; 
+import 'package:easy_localization/easy_localization.dart'; // <-- IMPORT
+import 'credit_card_form_page.dart';
 import 'schedule_page.dart';
 import 'representative_est_info.dart';
 import 'confirmation_page.dart';
-import 'transfer_code_page.dart'; // NUEVA IMPORTACIÓN
-
+import 'transfer_code_page.dart';
 import '../models/usuarios.dart';
 import '../services/auth_service.dart';
 import '../services/inscription_service.dart';
 import '../widgets/shared_footer.dart';
-import 'schedule_page.dart';
 
 enum FormCompletion { schedule, representative }
 
@@ -30,17 +24,11 @@ class _PaymentPageState extends State<PaymentPage> {
   String? _selectedPaymentMethod;
   Map<String, dynamic>? _selectedScheduleData;
   bool _isLoading = false;
-
-  // Variable de estado para saber si el usuario ya "guardó" los datos de la tarjeta.
   bool _cardDetailsProvided = false; 
-  
-  // NUEVA VARIABLE: para saber si el código de transferencia fue confirmado
   bool _transferCodeConfirmed = false;
 
-  // Notificador para rastrear la finalización de los formularios.
   final ValueNotifier<Set<FormCompletion>> _completionState = ValueNotifier({});
 
-  /// Navega a la página de selección de horario.
   void _navigateToSchedulePage() async {
     final result = await Navigator.push<Map<String, dynamic>>(
       context,
@@ -55,7 +43,6 @@ class _PaymentPageState extends State<PaymentPage> {
     }
   }
 
-  /// Navega a la página de datos del representante.
   void _navigateToRepresentativePage() async {
     final result = await Navigator.push<bool>(
       context,
@@ -69,7 +56,6 @@ class _PaymentPageState extends State<PaymentPage> {
     }
   }
   
-  /// Navega a la página del formulario de tarjeta y espera un resultado.
   void _navigateToCreditCardForm() async {
     final bool prerequisitesMet = _completionState.value.contains(FormCompletion.schedule) &&
                                  _completionState.value.contains(FormCompletion.representative);
@@ -80,27 +66,27 @@ class _PaymentPageState extends State<PaymentPage> {
         MaterialPageRoute(builder: (context) => CreditCardFormPage(scheduleData: _selectedScheduleData!)),
       );
 
-      // Si la página de tarjeta devuelve 'true', actualizamos el estado.
       if (result == true && mounted) {
         setState(() {
           _cardDetailsProvided = true; 
           _selectedPaymentMethod = 'card';
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Información de tarjeta guardada."), backgroundColor: Colors.blueAccent)
+          // <-- CORRECCIÓN
+          SnackBar(content: Text("pages.creditCard.cardInfoSaved".tr()), backgroundColor: Colors.blueAccent)
         );
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Por favor, complete los datos del representante y seleccione un horario primero."),
+        // <-- CORRECCIÓN
+        SnackBar(
+          content: Text("pages.payment.completePrerequisites".tr()),
           backgroundColor: Colors.orangeAccent,
         ),
       );
     }
   }
   
-  /// NUEVA FUNCIÓN: Navega a la página de código de transferencia
   void _navigateToTransferCodePage() async {
     final bool prerequisitesMet = _completionState.value.contains(FormCompletion.schedule) &&
                                  _completionState.value.contains(FormCompletion.representative);
@@ -111,30 +97,30 @@ class _PaymentPageState extends State<PaymentPage> {
         MaterialPageRoute(builder: (context) => const TransferCodePage()),
       );
 
-      // Si la página de transferencia devuelve 'true', actualizamos el estado.
       if (result == true && mounted) {
         setState(() {
           _transferCodeConfirmed = true;
           _selectedPaymentMethod = 'transfer';
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Código de transferencia confirmado correctamente."),
+          // <-- CORRECCIÓN
+          SnackBar(
+            content: Text("pages.payment.transferCodeConfirmed".tr()),
             backgroundColor: Colors.green,
           ),
         );
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Por favor, complete los datos del representante y seleccione un horario primero."),
+        // <-- CORRECCIÓN
+        SnackBar(
+          content: Text("pages.payment.completePrerequisites".tr()),
           backgroundColor: Colors.orangeAccent,
         ),
       );
     }
   }
   
-  /// Procesa la inscripción final.
   Future<void> _processPaymentAndInscription() async {
     if (_isLoading) return;
     setState(() { _isLoading = true; });
@@ -173,7 +159,8 @@ class _PaymentPageState extends State<PaymentPage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: const Color(0xFF213354),
-        title: const Text('Pago', style: TextStyle(color: Colors.white, fontSize: 24)),
+        // <-- CORRECCIÓN
+        title: Text('pages.payment.title'.tr(), style: const TextStyle(color: Colors.white, fontSize: 24)),
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [ IconButton(icon: const Icon(Icons.home_outlined, size: 28), onPressed: () => Navigator.of(context).pop()) ],
       ),
@@ -190,15 +177,18 @@ class _PaymentPageState extends State<PaymentPage> {
             if (_selectedScheduleData != null) ...[
               _buildTotalCostCard(),
               const SizedBox(height: 30),
-              const Text('Método de Pago', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              // <-- CORRECCIÓN
+              Text('pages.payment.paymentMethod'.tr(), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
-              _buildPaymentOption(title: 'Tarjeta de Crédito/Débito', subtitle: 'Visa, Mastercard', value: 'card'),
+              // <-- CORRECCIÓN
+              _buildPaymentOption(title: 'pages.payment.creditDebitCard'.tr(), subtitle: 'Visa, Mastercard', value: 'card'),
               const SizedBox(height: 12),
-              _buildPaymentOption(title: 'Transferencia Bancaria', subtitle: 'Pichincha, Banco de Loja', value: 'transfer'),
+              _buildPaymentOption(title: 'pages.payment.bankTransfer'.tr(), subtitle: 'Pichincha, Banco de Loja', value: 'transfer'),
             ]
             else ...[
               const SizedBox(height: 40),
-              Center(child: Text("Elija un horario para ver los métodos de pago.", textAlign: TextAlign.center, style: TextStyle(fontSize: 16, color: Colors.grey[600]))),
+              // <-- CORRECCIÓN
+              Center(child: Text("pages.payment.chooseScheduleToSeeMethods".tr(), textAlign: TextAlign.center, style: TextStyle(fontSize: 16, color: Colors.grey[600]))),
             ],
           ],
         ),
@@ -213,7 +203,6 @@ class _PaymentPageState extends State<PaymentPage> {
         if (value == 'card') {
           _navigateToCreditCardForm();
         } else if (value == 'transfer') {
-          // LLAMADA A LA NUEVA FUNCIÓN
           _navigateToTransferCodePage();
         }
       },
@@ -236,7 +225,6 @@ class _PaymentPageState extends State<PaymentPage> {
                 if (newValue == 'card') {
                   _navigateToCreditCardForm();
                 } else if (newValue == 'transfer') {
-                  // LLAMADA A LA NUEVA FUNCIÓN
                   _navigateToTransferCodePage();
                 }
               }
@@ -247,7 +235,6 @@ class _PaymentPageState extends State<PaymentPage> {
             Text(subtitle, style: TextStyle(color: Colors.grey[600])),
           ])),
           const SizedBox(width: 12),
-          // ACTUALIZACIÓN DEL ÍCONO PARA TRANSFERENCIA
           if (value == 'card' && _cardDetailsProvided)
             const Icon(Icons.check_circle, color: Colors.blueAccent)
           else if (value == 'transfer' && _transferCodeConfirmed)
@@ -291,7 +278,8 @@ class _PaymentPageState extends State<PaymentPage> {
             ),
             child: _isLoading
               ? const CircularProgressIndicator(color: Colors.white) 
-              : Text('Realizar Pago - \$${_selectedScheduleData?['cost']?.toStringAsFixed(2) ?? '0.00'}', style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              // <-- CORRECCIÓN
+              : Text('pages.payment.makePaymentWithAmount'.tr(namedArgs: {'amount': _selectedScheduleData?['cost']?.toStringAsFixed(2) ?? '0.00'}), style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
           ),
         ),
         const SharedFooter(),
@@ -307,15 +295,17 @@ class _PaymentPageState extends State<PaymentPage> {
           ElevatedButton(
             onPressed: _navigateToRepresentativePage,
             style: ElevatedButton.styleFrom(backgroundColor: Colors.amber[700], shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)), padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24)),
-            child: const Text('Datos del Representante', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            // <-- CORRECCIÓN
+            child: Text('pages.payment.representativeData'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
           ),
           if (completedForms.contains(FormCompletion.representative))
             Padding(
               padding: const EdgeInsets.only(top: 8.0),
-              child: Row(mainAxisAlignment: MainAxisAlignment.center, children: const [
-                Icon(Icons.check_circle, color: Colors.green, size: 18),
-                SizedBox(width: 4),
-                Text("Datos guardados correctamente", style: TextStyle(color: Colors.green)),
+              child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                const Icon(Icons.check_circle, color: Colors.green, size: 18),
+                const SizedBox(width: 4),
+                // <-- CORRECCIÓN
+                Text("pages.payment.dataSavedSuccessfully".tr(), style: const TextStyle(color: Colors.green)),
               ]),
             ),
         ],
@@ -334,16 +324,19 @@ class _PaymentPageState extends State<PaymentPage> {
             Icon(Icons.info, color: Colors.amber[800], size: 30),
             const SizedBox(width: 12),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('¡Selecciona un Curso!', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.amber[900])),
+              // <-- CORRECCIÓN
+              Text('pages.payment.selectCourseTitle'.tr(), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.amber[900])),
               const SizedBox(height: 4),
-              const Text('Debe seleccionar un horario para la inscripción.', style: TextStyle(fontSize: 14, color: Colors.black54)),
+              // <-- CORRECCIÓN
+              Text('pages.payment.selectScheduleForInscription'.tr(), style: const TextStyle(fontSize: 14, color: Colors.black54)),
             ])),
           ]),
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: _navigateToSchedulePage,
             style: ElevatedButton.styleFrom(backgroundColor: Colors.amber[700], shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24), minimumSize: const Size(double.infinity, 50)),
-            child: const Text('Elegir un Horario', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+            // <-- CORRECCIÓN
+            child: Text('pages.payment.chooseSchedule'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
           )
         ]),
       ),
@@ -354,10 +347,11 @@ class _PaymentPageState extends State<PaymentPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(children: const [
-          Icon(Icons.check_circle, color: Colors.green),
-          SizedBox(width: 8),
-          Text('Horario Seleccionado', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),)
+        Row(children: [
+          const Icon(Icons.check_circle, color: Colors.green),
+          const SizedBox(width: 8),
+          // <-- CORRECCIÓN
+          Text('pages.payment.scheduleSelected'.tr(), style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold),)
         ]),
         const SizedBox(height: 8),
         Container(
@@ -374,8 +368,9 @@ class _PaymentPageState extends State<PaymentPage> {
             ),
             OutlinedButton(
               onPressed: _navigateToSchedulePage, 
-              style: OutlinedButton.styleFrom(backgroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))), 
-              child: const Text('Cambiar', style: TextStyle(color: Colors.black))
+              style: OutlinedButton.styleFrom(backgroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+              // <-- CORRECCIÓN 
+              child: Text('common.change'.tr(), style: const TextStyle(color: Colors.black))
             )
           ]),
         ),
@@ -391,15 +386,17 @@ class _PaymentPageState extends State<PaymentPage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Costo Total', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            // <-- CORRECCIÓN
+            Text('pages.payment.totalCost'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             Text('\$${_selectedScheduleData!['cost']?.toStringAsFixed(2)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           ],
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           value: '5-months', 
-          items: const [
-            DropdownMenuItem(value: '5-months', child: Text('Diferido 5 meses - \$50.00/mes'))
+          items: [
+            // <-- CORRECCIÓN
+            DropdownMenuItem(value: '5-months', child: Text('pages.payment.deferred5Months'.tr()))
           ], 
           onChanged: (v){}, 
           decoration: InputDecoration(

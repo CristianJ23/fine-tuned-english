@@ -1,10 +1,185 @@
 {
-  "title": "Generador de Certificados",
-  "generar_certificado": "Generar Certificado",
-  "matriculas": "Matrículas",
-  "Recomendaciones": "Recomendaciones",
-  "Sobre Nosotros": "Sobre Nosotros",
-  "Configuraciones": "Configuraciones",
-  "Cerrar Sesión": "Crrar sesion",
-  "hello": "Hola, {{name}}"
+  "drawer": {
+    "generateCertificate": "Generar Certificado",
+    "enrollments": "Matrículas",
+    "recommendations": "Recomendaciones",
+    "aboutUs": "Sobre Nosotros",
+    "settings": "Configuraciones",
+    "logout": "Cerrar Sesión"
+  },
+  "common": {
+    "hello": "Hola, {name}",
+    "level": "Nivel",
+    "program": "Programa",
+    "title": "Título",
+    "descriptionOptional": "Descripción (Opcional)",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "close": "Cerrar",
+    "send": "Enviar",
+    "update": "Actualizar",
+    "delete": "Eliminar",
+    "ok": "OK",
+    "total": "{count} Total",
+    "change": "Cambiar",
+    "file": "Archivo",
+    "names": "Nombres",
+    "lastNames": "Apellidos",
+    "email": "Correo electrónico",
+    "idNumber": "Número de cédula",
+    "phoneNumber": "Número de celular",
+    "birthDate": "Fecha de nacimiento"
+  },
+  "errors": {
+    "notAuthenticated": "Usuario no autenticado.",
+    "loadDataError": "Error al cargar datos: {error}"
+  },
+  "validators": {
+    "requiredField": "Campo requerido",
+    "invalidEmail": "Correo inválido",
+    "selectADate": "Seleccione una fecha"
+  },
+  "taskStatus": {
+    "pending": "Pendiente",
+    "notDelivered": "No Entregado",
+    "done": "Entregada",
+    "graded": "Calificada"
+  },
+  "pages": {
+    "main": {
+      "home": "Inicio",
+      "calendar": "Calendario",
+      "schedule": "Horario",
+      "profile": "Perfil"
+    },
+    "home": {
+      "noActiveCourses": "No estás inscrito en ningún curso activo.",
+      "allTasks": "Todas las Tareas",
+      "newTasks": "Tareas Nuevas",
+      "recentTasks": "Tareas Recientes",
+      "noTasksInSection": "No hay tareas en esta sección."
+    },
+    "allTasks": {
+      "title": "Todas Las Tareas",
+      "noTasksForSelection": "No hay tareas para la selección actual."
+    },
+    "calendar": {
+      "addPersonalReminder": "Añadir Recordatorio Personal",
+      "eventsOf": "Eventos del {date}",
+      "addReminderFor": "Añadir recordatorio para\n{date}",
+      "justifyAbsence": "Justificar Falta",
+      "justifyAbsenceTitle": "Justificar Falta",
+      "reasonForAbsence": "Motivo de la inasistencia",
+      "editReminder": "Editar Recordatorio",
+      "confirmDeletion": "Confirmar Eliminación",
+      "confirmDeleteReminderMessage": "¿Estás seguro de que deseas eliminar este recordatorio?",
+      "absenceJustified": "Falta justificada.",
+      "reminderDeleted": "Recordatorio eliminado.",
+      "legend": "Leyenda",
+      "legendDueDate": "Fecha de Entrega",
+      "legendAbsences": "Faltas",
+      "legendAttendance": "Asistencia",
+      "legendPersonalReminder": "Recordatorio Personal",
+      "emptyStateTitle": "¡Todo en orden!",
+      "emptyStateMessage": "No hay eventos programados para este día.",
+      "justified": "Justificada",
+      "unjustified": "Sin Justificar"
+    },
+    "announcements": {
+      "title": "Anuncios",
+      "tabAll": "Todas",
+      "tabUnread": "No Leído",
+      "openingAnnouncement": "Abriendo {type}"
+    },
+    "profile": {
+      "personalData": "Datos Personales",
+      "academicHistory": "Historial Académico",
+      "modify": "Modificar"
+    },
+    "schedule": {
+      "title": "Horarios",
+      "selectLevel": "Selecciona un Nivel",
+      "noCoursesForLevel": "No hay cursos disponibles para el nivel seleccionado.",
+      "availableSpots": "{count} Cupos Disponibles",
+      "enroll": "Inscribirse"
+    },
+    "payment": {
+      "title": "Pago",
+      "representativeData": "Datos del Representante",
+      "dataSavedSuccessfully": "Información guardada correctamente",
+      "completePrerequisites": "Por favor, complete los datos del representante y seleccione un horario primero.",
+      "transferCodeConfirmed": "Código de transferencia confirmado correctamente.",
+      "selectCourseTitle": "¡Selecciona un Curso!",
+      "selectScheduleForInscription": "Debe seleccionar un horario para la inscripción.",
+      "chooseSchedule": "Elegir un Horario",
+      "scheduleSelected": "Horario Seleccionado",
+      "totalCost": "Costo Total",
+      "deferred5Months": "Diferido 5 meses - $50.00/mes",
+      "paymentMethod": "Método de Pago",
+      "creditDebitCard": "Tarjeta de Crédito/Débito",
+      "bankTransfer": "Transferencia Bancaria",
+      "chooseScheduleToSeeMethods": "Elija un horario para ver los métodos de pago.",
+      "makePaymentWithAmount": "Realizar Pago - ${amount}"
+    },
+    "representative": {
+      "title": "Datos del Representante",
+      "isOwnRepresentative": "¿El estudiante es su propio representante?",
+      "ifSoCheckHere": "Si es así, marca aquí:",
+      "pleaseFillData": "Por favor, completa los siguientes datos:",
+      "saveInformation": "Guardar Información"
+    },
+    "creditCard": {
+      "paymentInfoTitle": "Información de pago",
+      "simulatedPayment": "Pago Simulado",
+      "paymentSuccessful": "¡El pago ha sido procesado exitosamente!",
+      "cardNumber": "Número de Tarjeta",
+      "expiryDate": "Fecha de Expiración",
+      "cardHolderName": "Nombre del Titular",
+      "cvv": "CVV",
+      "totalPaid": "Total Pagado:",
+      "makePayment": "Realizar Pago",
+      "cardInfoSaved": "Información de tarjeta guardada."
+    },
+    "transfer": {
+      "title": "Código de Transferencia",
+      "pleaseEnterCode": "Por favor, ingrese el código de transferencia.",
+      "bankInfo": "Información Bancaria",
+      "bank": "Banco:",
+      "account": "Cuenta:",
+      "beneficiary": "Beneficiario:",
+      "ruc": "Cédula/RUC:",
+      "instructions": "Instrucciones",
+      "instructionsText": "1. Realice la transferencia a la cuenta indicada\n2. Ingrese el código de confirmación que aparece en su comprobante\n3. Presione \"Confirmar Código\" para completar el proceso",
+      "transferCode": "Código de Transferencia",
+      "enterVoucherCode": "Ingrese el código de su comprobante",
+      "confirmCode": "Confirmar Código"
+    },
+    "confirmation": {
+      "paymentReady": "Listo, ¡Pago Realizado!",
+      "loremIpsum": "Tu pago ha sido procesado exitosamente y tu matrícula está completa. ¡Bienvenido!",
+      "finish": "Finalizar"
+    },
+    "taskDetail": {
+      "submissionSuccess": "¡Tarea entregada con éxito!",
+      "fileUploaded": "¡Archivo subido!",
+      "selectFileFirst": "Por favor, selecciona un archivo primero.",
+      "attachFile": "Adjuntar Archivo",
+      "noFileSelected": "Ningún archivo seleccionado",
+      "uploadFile": "Subir Archivo",
+      "pendingMessage": "Tarea en progreso. Termina de adjuntar los archivos para entregar.",
+      "attachFileSimulated": "Adjuntar Archivo (Simulado)",
+      "submitHomework": "Entregar Deber",
+      "cancelSubmission": "Cancelar Entrega",
+      "deliveryDate": "Fecha de entrega",
+      "ofPoints": "De {points} pts",
+      "addReminderNotifications": "Añadir notificaciones de recordatorio",
+      "qualification": "Calificación",
+      "periods": "Puntos",
+      "low": "Bajo: 0",
+      "average": "Promedio: 7.5",
+      "high": "Alto: 10",
+      "comments": "Comentarios",
+      "noCommentsYet": "No hay comentarios aún."
+    }
+  }
 }

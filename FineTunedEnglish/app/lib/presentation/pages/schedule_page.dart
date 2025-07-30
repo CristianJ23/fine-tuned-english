@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart'; // <-- IMPORT
 import '../models/english_level.dart';
 import '../models/sub_level.dart';
 import '../models/usuarios.dart'; 
@@ -66,7 +67,8 @@ class _SchedulePageState extends State<SchedulePage> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: const Color(0xFF213354),
-        title: const Text('Horarios', style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+        // <-- CORRECCIÓN
+        title: Text('pages.schedule.title'.tr(), style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
         iconTheme: const IconThemeData(color: Colors.white),
         automaticallyImplyLeading: false,
         leading: const SizedBox.shrink(),
@@ -121,16 +123,18 @@ class _SchedulePageState extends State<SchedulePage> {
             child: Text(level.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           );
         }).toList(),
-        hint: const Text('Selecciona un Nivel', style: TextStyle(color: Colors.white70)),
+        // <-- CORRECCIÓN
+        hint: Text('pages.schedule.selectLevel'.tr(), style: const TextStyle(color: Colors.white70)),
       ),
     );
   }
 
   Widget _buildSubLevelsList() {
     if (_subLevels.isEmpty && !_isLoadingSubLevels) {
-      return const Center(child: Padding(
-        padding: EdgeInsets.all(32.0),
-        child: Text('No hay cursos disponibles para el nivel seleccionado.', textAlign: TextAlign.center,),
+      return Center(child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        // <-- CORRECCIÓN
+        child: Text('pages.schedule.noCoursesForLevel'.tr(), textAlign: TextAlign.center,),
       ));
     }
     return ListView.separated(
@@ -158,7 +162,8 @@ class _SchedulePageState extends State<SchedulePage> {
           const SizedBox(height: 20),
           _buildCardInfoRow(Icons.calendar_today_outlined, subLevel.dias, subLevel.horas),
           const SizedBox(height: 16),
-          _buildCardInfoRow(Icons.people_outline, '${subLevel.cuposDisponibles} Cupos Disponibles', '', iconColor: cardColor),
+          // <-- CORRECCIÓN
+          _buildCardInfoRow(Icons.people_outline, 'pages.schedule.availableSpots'.tr(args: [subLevel.cuposDisponibles.toString()]), '', iconColor: cardColor),
           const SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -174,7 +179,8 @@ class _SchedulePageState extends State<SchedulePage> {
             alignment: Alignment.centerRight,
             child: Padding(
               padding: const EdgeInsets.only(right: 40, top: 4),
-              child: Text('${subLevel.cuposTotales} Total', style: TextStyle(color: Colors.grey[400], fontSize: 12)),
+              // <-- CORRECCIÓN
+              child: Text('common.total'.tr(args: [subLevel.cuposTotales.toString()]), style: TextStyle(color: Colors.grey[400], fontSize: 12)),
             ),
           ),
           const SizedBox(height: 20),
@@ -195,7 +201,8 @@ class _SchedulePageState extends State<SchedulePage> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               padding: const EdgeInsets.symmetric(vertical: 12),
             ),
-            child: const Text('Inscribirse', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            // <-- CORRECCIÓN
+            child: Text('pages.schedule.enroll'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
           ),
         ],
       ),

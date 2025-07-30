@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart'; // <-- 1. Importar easy_localization
 import '../models/enrolled_course.dart';
 import '../models/english_level.dart';
 import '../services/auth_service.dart';
@@ -41,7 +42,8 @@ class _AllTasksPageState extends State<AllTasksPage> {
 
     final studentId = AuthService.currentUser?.id;
     if (studentId == null) {
-      if (mounted) setState(() { _isLoading = false; _errorMessage = "Usuario no autenticado."; });
+      if (mounted) setState(() { _isLoading = false; 
+      _errorMessage = "errors.notAuthenticated".tr(); });
       return;
     }
     
@@ -136,7 +138,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text('Todas Las Tareas', style: TextStyle(color: Colors.white)),
+        title: Text('pages.allTasks.title'.tr(), style: const TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF213354),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -154,9 +156,9 @@ class _AllTasksPageState extends State<AllTasksPage> {
             else if (_errorMessage != null)
               SliverFillRemaining(child: Center(child: Text(_errorMessage!)))
             else if (_currentTasks.isEmpty)
-              const SliverFillRemaining(child: Center(child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text("No hay tareas para la selección actual.", textAlign: TextAlign.center),
+              SliverFillRemaining(child: Center(child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text("pages.allTasks.noTasksForSelection".tr(), textAlign: TextAlign.center),
               )))
             else
               SliverPadding(
@@ -183,9 +185,9 @@ class _AllTasksPageState extends State<AllTasksPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _buildLevelDropdown('Nivel', _selectedLevel, _enrolledLevels, (level) => _filterCoursesByLevel(level)),
+          _buildLevelDropdown('common.level'.tr(), _selectedLevel, _enrolledLevels, (level) => _filterCoursesByLevel(level)),
           const SizedBox(height: 10),
-          _buildCourseDropdown('Programa', _selectedCourse, _filteredCourses, (course) => _onCourseSelected(course)),
+          _buildCourseDropdown('common.program'.tr(), _selectedCourse, _filteredCourses, (course) => _onCourseSelected(course)),
         ],
       ),
     );

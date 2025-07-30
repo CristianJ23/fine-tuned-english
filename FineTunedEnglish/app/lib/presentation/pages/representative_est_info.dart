@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart'; // <-- IMPORT
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/usuarios.dart';
 import '../models/representative.dart';
@@ -61,7 +62,7 @@ class _RepresentativeFormPageState extends State<RepresentativeFormPage> {
           _idNumberController.text = currentUser.numeroCedula;
           _phoneController.text = currentUser.telefono;
           _selectedBirthDate = currentUser.fechaNacimiento;
-          _birthDateController.text = "${currentUser.fechaNacimiento.day}/${currentUser.fechaNacimiento.month}/${currentUser.fechaNacimiento.year}";
+          _birthDateController.text = DateFormat.yMd(context.locale.toString()).format(currentUser.fechaNacimiento);
         });
       }
     } else {
@@ -95,7 +96,8 @@ class _RepresentativeFormPageState extends State<RepresentativeFormPage> {
       }
       
       if(mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Información guardada correctamente'), backgroundColor: Colors.green));
+        // <-- CORRECCIÓN
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('pages.payment.dataSavedSuccessfully'.tr()), backgroundColor: Colors.green));
         Navigator.pop(context, true);
       }
 
@@ -113,11 +115,14 @@ class _RepresentativeFormPageState extends State<RepresentativeFormPage> {
       initialDate: _selectedBirthDate ?? DateTime(2000),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
+      // Para que el calendario también se muestre en el idioma correcto
+      locale: context.locale, 
     );
     if (picked != null) {
       setState(() {
         _selectedBirthDate = picked;
-        _birthDateController.text = "${picked.day}/${picked.month}/${picked.year}";
+        // Usar DateFormat para mostrar la fecha en el formato local
+        _birthDateController.text = DateFormat.yMd(context.locale.toString()).format(picked);
       });
     }
   }
@@ -126,7 +131,8 @@ class _RepresentativeFormPageState extends State<RepresentativeFormPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Datos del Representante', style: TextStyle(color: Colors.white)),
+        // <-- CORRECCIÓN
+        title: Text('pages.representative.title'.tr(), style: const TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF213354),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -142,30 +148,32 @@ class _RepresentativeFormPageState extends State<RepresentativeFormPage> {
                   children: [
                     _buildRepresentativeSelector(),
                     const SizedBox(height: 24),
-                    const Text('Por favor, completa los siguientes datos:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    // <-- CORRECCIÓN
+                    Text('pages.representative.pleaseFillData'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 20),
-                    TextFormField(controller: _firstNameController, decoration: const InputDecoration(labelText: 'Nombres'), validator: (v) => v!.isEmpty ? 'Campo requerido' : null),
+                    // <-- CORRECCIONES EN TODOS LOS CAMPOS
+                    TextFormField(controller: _firstNameController, decoration: InputDecoration(labelText: 'common.names'.tr()), validator: (v) => v!.isEmpty ? 'validators.requiredField'.tr() : null),
                     const SizedBox(height: 16),
-                    TextFormField(controller: _lastNameController, decoration: const InputDecoration(labelText: 'Apellidos'), validator: (v) => v!.isEmpty ? 'Campo requerido' : null),
+                    TextFormField(controller: _lastNameController, decoration: InputDecoration(labelText: 'common.lastNames'.tr()), validator: (v) => v!.isEmpty ? 'validators.requiredField'.tr() : null),
                     const SizedBox(height: 16),
-                    TextFormField(controller: _emailController, decoration: const InputDecoration(labelText: 'Correo electrónico'), keyboardType: TextInputType.emailAddress, validator: (v) => v!.isEmpty || !v.contains('@') ? 'Correo inválido' : null),
+                    TextFormField(controller: _emailController, decoration: InputDecoration(labelText: 'common.email'.tr()), keyboardType: TextInputType.emailAddress, validator: (v) => v!.isEmpty || !v.contains('@') ? 'validators.invalidEmail'.tr() : null),
                     const SizedBox(height: 16),
-                    TextFormField(controller: _idNumberController, decoration: const InputDecoration(labelText: 'Número de cédula'), keyboardType: TextInputType.number, validator: (v) => v!.isEmpty ? 'Campo requerido' : null),
+                    TextFormField(controller: _idNumberController, decoration: InputDecoration(labelText: 'common.idNumber'.tr()), keyboardType: TextInputType.number, validator: (v) => v!.isEmpty ? 'validators.requiredField'.tr() : null),
                     const SizedBox(height: 16),
-                    TextFormField(controller: _phoneController, decoration: const InputDecoration(labelText: 'Número de celular'), keyboardType: TextInputType.phone, validator: (v) => v!.isEmpty ? 'Campo requerido' : null),
+                    TextFormField(controller: _phoneController, decoration: InputDecoration(labelText: 'common.phoneNumber'.tr()), keyboardType: TextInputType.phone, validator: (v) => v!.isEmpty ? 'validators.requiredField'.tr() : null),
                     const SizedBox(height: 16),
                     GestureDetector(
                       onTap: _selectDate,
                       child: AbsorbPointer(
-                        child: TextFormField(controller: _birthDateController, decoration: const InputDecoration(labelText: 'Fecha de nacimiento', suffixIcon: Icon(Icons.calendar_today)), validator: (v) => v!.isEmpty ? 'Seleccione una fecha' : null),
+                        child: TextFormField(controller: _birthDateController, decoration: InputDecoration(labelText: 'common.birthDate'.tr(), suffixIcon: const Icon(Icons.calendar_today)), validator: (v) => v!.isEmpty ? 'validators.selectADate'.tr() : null),
                       ),
-                       
                     ),
                     const SizedBox(height: 40),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF213354), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14)),
                       onPressed: _submitForm,
-                      child: const Text('Guardar Información'),
+                      // <-- CORRECCIÓN
+                      child: Text('pages.representative.saveInformation'.tr()),
                     ),
                   ],
                 ),
@@ -183,10 +191,12 @@ class _RepresentativeFormPageState extends State<RepresentativeFormPage> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(color: Colors.amber[100], borderRadius: BorderRadius.circular(12)),
       child: Column(children: [
-        const Text('¿El estudiante es su propio representante?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF213354)), textAlign: TextAlign.center),
+        // <-- CORRECCIÓN
+        Text('pages.representative.isOwnRepresentative'.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF213354)), textAlign: TextAlign.center),
         const SizedBox(height: 8),
         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          const Text('Si es así, marca aquí:', style: TextStyle(fontSize: 16)),
+          // <-- CORRECCIÓN
+          Text('pages.representative.ifSoCheckHere'.tr(), style: const TextStyle(fontSize: 16)),
           const SizedBox(width: 8),
           Checkbox(value: _isChecked, activeColor: Colors.orange, onChanged: _onCheckboxChanged),
         ]),

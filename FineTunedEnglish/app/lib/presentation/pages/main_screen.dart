@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../widgets/common_app_bar.dart';
 import '../widgets/app_drawer.dart';
 import 'home_page.dart';
@@ -6,6 +7,7 @@ import 'profile_page.dart';
 import 'calendar_page.dart';
 
 class MainScreen extends StatefulWidget {
+  // CORRECCIÓN: Aceptamos una Key en el constructor
   const MainScreen({super.key});
 
   @override
@@ -15,16 +17,11 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 1;
 
-  static const List<String> _appBarTitles = <String>[
-    'Calendario',
-    'Inicio',
-    'Perfil',
-  ];
-
-  static const List<Widget> _widgetOptions = <Widget>[
-    CalendarPage(),
-    HomePage(),
-    ProfilePage(),
+  // Volvemos a usar static final porque la Key se encargará de la reconstrucción.
+  static final List<Widget> _widgetOptions = <Widget>[
+    const CalendarPage(),
+    const HomePage(),
+    const ProfilePage(),
   ];
 
   void _onItemTapped(int index) {
@@ -35,29 +32,36 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Esta lista se crea en cada build, lo cual es correcto.
+    final List<String> appBarTitles = <String>[
+      'pages.main.calendar'.tr(),
+      'pages.main.home'.tr(),
+      'pages.main.profile'.tr(),
+    ];
+
     return Scaffold(
-      appBar: CommonAppBar(title: _appBarTitles[_selectedIndex]),
+      appBar: CommonAppBar(title: appBarTitles[_selectedIndex]),
       drawer: const AppDrawer(),
-      body: _widgetOptions.elementAt(_selectedIndex),
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _widgetOptions,
+      ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: const Color(0xFF213354),
-
-        items: const [
+        items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_rounded),
-            label: 'Horario',
+            icon: const Icon(Icons.calendar_today_rounded),
+            label: 'pages.main.schedule'.tr(),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Inicio',
+            icon: const Icon(Icons.home_outlined),
+            label: 'pages.main.home'.tr(),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline_rounded),
-            label: 'Perfil',
+            icon: const Icon(Icons.person_outline_rounded),
+            label: 'pages.main.profile'.tr(),
           ),
         ],
-        // ==============================================================
-
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.grey,

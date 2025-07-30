@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart'; // <-- 1. IMPORTA ESTO
 // Asegúrate de que las rutas de import sean correctas
 import 'package:app/presentation/services/auth_service.dart';
 import 'package:app/presentation/widgets/input_field.dart';
@@ -31,10 +32,6 @@ class _LoginPageState extends State<LoginPage> {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
-    // ===== AÑADE ESTA LÍNEA DE DEPURACIÓN AQUÍ =====
-    print("Intentando iniciar sesión con: Email -> '$email' | Password -> '$password'");
-    // ===============================================
-
     final error = await _authService.signInWithEmailAndPassword(
       email: email,
       password: password,
@@ -43,9 +40,16 @@ class _LoginPageState extends State<LoginPage> {
 
     if (mounted) {
       if (error == null) {
+        // ===== CORRECCIÓN CLAVE AQUÍ =====
+        // Al navegar a MainScreen, le pasamos una Key que depende del idioma actual.
+        // Esto fuerza a MainScreen a reconstruirse desde cero si el idioma cambia.
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const MainScreen()),
+          MaterialPageRoute(
+            builder: (context) {
+              return MainScreen(key: ValueKey(context.locale.toString()));
+            }
+          ),
         );
       } else {
         setState(() {

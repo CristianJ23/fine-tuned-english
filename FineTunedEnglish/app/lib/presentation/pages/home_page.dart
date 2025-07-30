@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart'; // <-- IMPORT
 import '../models/enrolled_course.dart';
 import '../models/english_level.dart';
 import '../services/auth_service.dart';
@@ -45,7 +46,11 @@ class _HomePageState extends State<HomePage> {
 
     final studentId = AuthService.currentUser?.id;
     if (studentId == null) {
-      if (mounted) setState(() { _errorMessage = "Error: Usuario no autenticado."; _isLoading = false; });
+      if (mounted) setState(() { 
+        // <-- CORRECCIÓN
+        _errorMessage = "errors.notAuthenticated".tr(); 
+        _isLoading = false; 
+      });
       return;
     }
     
@@ -75,8 +80,9 @@ class _HomePageState extends State<HomePage> {
       }
     } catch(e) {
       if(mounted) {
-        setState(() { 
-        _errorMessage = "Error al cargar datos: $e"; 
+        setState(() {
+        // <-- CORRECCIÓN
+        _errorMessage = "errors.loadDataError".tr(namedArgs: {'error': e.toString()}); 
         _isLoading = false; 
       });
       }
@@ -128,10 +134,11 @@ class _HomePageState extends State<HomePage> {
     if (_isLoading) return const Center(child: CircularProgressIndicator());
     if (_errorMessage != null) return Center(child: Text(_errorMessage!));
     if (_allEnrolledCourses.isEmpty) {
-      return const Center(
+      return Center(
         child: Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Text("No estás inscrito en ningún curso activo.", textAlign: TextAlign.center),
+            padding: const EdgeInsets.all(16.0),
+            // <-- CORRECCIÓN
+            child: Text("pages.home.noActiveCourses".tr(), textAlign: TextAlign.center),
         ),
     );
     }
@@ -159,11 +166,13 @@ class _HomePageState extends State<HomePage> {
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildSectionHeader('Tareas Nuevas'),
+                      // <-- CORRECCIÓN
+                      _buildSectionHeader('pages.home.newTasks'),
                       const SizedBox(height: 16),
                       _buildTasksList(newTasks),
                       const SizedBox(height: 24),
-                      _buildSectionHeader('Tareas Recientes'),
+                      // <-- CORRECCIÓN
+                      _buildSectionHeader('pages.home.recentTasks'),
                       const SizedBox(height: 16),
                       _buildTasksList(recentTasks),
                       const SizedBox(height: 24),
@@ -189,7 +198,8 @@ class _HomePageState extends State<HomePage> {
                   DropdownButton<EnglishLevel>(
                     value: _selectedLevel,
                     isExpanded: true,
-                    hint: const Text("Nivel", style: TextStyle(color: Colors.white70)),
+                    // <-- CORRECCIÓN
+                    hint: Text("common.level".tr(), style: const TextStyle(color: Colors.white70)),
                     dropdownColor: const Color(0xFF334155),
                     icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
                     style: const TextStyle(color: Colors.white, fontSize: 16),
@@ -210,7 +220,8 @@ class _HomePageState extends State<HomePage> {
                     }
                   },
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.pink, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)), padding: const EdgeInsets.symmetric(vertical: 14)),
-                  child: const Text('Todas las Tareas', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  // <-- CORRECCIÓN
+                  child: Text('pages.home.allTasks'.tr(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -220,7 +231,8 @@ class _HomePageState extends State<HomePage> {
             DropdownButton<EnrolledCourse>(
               value: _selectedCourse,
               isExpanded: true,
-              hint: const Text("Programa", style: TextStyle(color: Colors.white70)),
+              // <-- CORRECCIÓN
+              hint: Text("common.program".tr(), style: const TextStyle(color: Colors.white70)),
               dropdownColor: const Color(0xFF334155),
               icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
               style: const TextStyle(color: Colors.white, fontSize: 16),
@@ -242,16 +254,18 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(String titleKey) {
     return Padding(
       padding: const EdgeInsets.only(top: 8, bottom: 8),
-      child: Text(title, style: const TextStyle(color: Colors.pink, fontSize: 22, fontWeight: FontWeight.bold)),
+      // <-- CORRECCIÓN
+      child: Text(titleKey.tr(), style: const TextStyle(color: Colors.pink, fontSize: 22, fontWeight: FontWeight.bold)),
     );
   }
 
   Widget _buildTasksList(List<TaskWithSubmission> tasks) {
     if (tasks.isEmpty) {
-      return const SizedBox(height: 100, child: Center(child: Text("No hay tareas en esta sección.")));
+      // <-- CORRECCIÓN
+      return SizedBox(height: 100, child: Center(child: Text("pages.home.noTasksInSection".tr())));
     }
     return SizedBox(
       height: 140,
